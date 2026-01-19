@@ -52,7 +52,6 @@ const SystemDiagnostics: React.FC = () => {
     const start = Date.now();
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      // We simulate a reasoning task to check logic integrity
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: 'Perform a system heartbeat check. Return "HEALTH_OK" and current timestamp.',
@@ -80,7 +79,6 @@ const SystemDiagnostics: React.FC = () => {
     { name: 'Bio-Vision Scanner', id: 'gemini-3-flash-preview', role: 'OCR & pill identification from images', type: 'Multimodal' },
     { name: 'Neural Chat', id: 'gemini-3-pro-search', role: 'Real-time grounding with Google Search', type: 'Agent' },
     { name: 'Diction Synthesis', id: 'gemini-2.5-flash-tts', role: 'Clinical voice generation', type: 'Audio' },
-    { name: 'Visual Studio', id: 'gemini-3-pro-image', role: 'Bio-concept visualization', type: 'Image' },
     { name: 'Stability Core', id: 'biomath-v2-local', role: 'Symptom variance mathematical index', type: 'Math' },
   ];
 
@@ -186,24 +184,6 @@ const SystemDiagnostics: React.FC = () => {
               ))}
             </div>
           </div>
-        </div>
-
-        {/* System Summary Footer */}
-        <div className="bg-slate-950 p-12 rounded-[4rem] flex flex-col md:flex-row items-center justify-between gap-8 border border-white/5">
-           <div className="space-y-2">
-             <h3 className="text-white text-3xl font-black uppercase italic tracking-tighter">Diagnostic Summary</h3>
-             <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.4em]">Verified Build: BMC-0X-SYNC-2025</p>
-           </div>
-           <div className="flex gap-4">
-              <div className="p-6 bg-white/5 rounded-3xl border border-white/10 flex flex-col items-center">
-                 <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest mb-1">Engines</span>
-                 <span className="text-white font-black text-xl italic">6/6</span>
-              </div>
-              <div className="p-6 bg-white/5 rounded-3xl border border-white/10 flex flex-col items-center">
-                 <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest mb-1">Health</span>
-                 <span className="text-emerald-500 font-black text-xl italic">OPTIMAL</span>
-              </div>
-           </div>
         </div>
       </div>
     </div>

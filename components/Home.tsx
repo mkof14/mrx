@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Medication, SymptomEntry, RiskColor } from '../types';
 import { BORDER_COLOR_MAP } from '../constants';
@@ -30,7 +29,7 @@ const Home: React.FC<Props> = ({ medications, checkins, analysisResult, isSyncin
         
         <div className="max-w-6xl mx-auto px-6 space-y-16 flex-1">
           {/* Welcome Card */}
-          <div className="bg-white dark:bg-slate-900 rounded-[4rem] p-10 md:p-16 shadow-3xl border border-slate-100 dark:border-white/5 relative overflow-hidden group">
+          <div className="bg-slate-50 dark:bg-slate-900 rounded-[4rem] p-10 md:p-16 shadow-3xl border border-slate-200 dark:border-white/5 relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/5 rounded-full blur-[100px] -mr-32 -mt-32"></div>
             
             <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -40,7 +39,7 @@ const Home: React.FC<Props> = ({ medications, checkins, analysisResult, isSyncin
                     Welcome to <br/>
                     <span className="text-blue-600">MRX.Health</span>
                   </h2>
-                  <p className="text-slate-500 dark:text-slate-400 text-lg font-bold italic leading-relaxed">
+                  <p className="text-slate-600 dark:text-slate-400 text-lg font-bold italic leading-relaxed">
                     Ready to track your health? Start by adding the pills you take daily, then tell us how you're feeling.
                   </p>
                 </div>
@@ -54,7 +53,7 @@ const Home: React.FC<Props> = ({ medications, checkins, analysisResult, isSyncin
                   </button>
                   <button 
                     onClick={() => onNavigate && onNavigate('checkin')}
-                    className="bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-white border-2 border-slate-200 dark:border-white/10 px-10 py-5 rounded-3xl font-black text-lg hover:bg-slate-200 transition-all"
+                    className="bg-white dark:bg-white/5 text-slate-700 dark:text-white border-2 border-slate-200 dark:border-white/10 px-10 py-5 rounded-3xl font-black text-lg hover:bg-slate-50 transition-all shadow-sm"
                   >
                     Check In
                   </button>
@@ -62,10 +61,10 @@ const Home: React.FC<Props> = ({ medications, checkins, analysisResult, isSyncin
               </div>
 
               {/* SEARCH ANIMATION CARD */}
-              <div className="relative bg-slate-950 rounded-[3rem] p-10 border border-white/5 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-1000 delay-300">
+              <div className="relative bg-slate-950 rounded-[3rem] p-10 border border-white/5 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-1000 delay-300 min-h-[300px] flex items-center justify-center">
                 <div className="absolute inset-x-0 h-1 bg-blue-400/50 top-0 animate-scanner"></div>
                 
-                <div className="space-y-8 relative">
+                <div className="space-y-8 relative w-full">
                   <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10">
                     <div className="w-12 h-12 bg-blue-600/20 rounded-xl flex items-center justify-center text-3xl animate-pulse">💊</div>
                     <div className="space-y-2 flex-1">
@@ -96,7 +95,7 @@ const Home: React.FC<Props> = ({ medications, checkins, analysisResult, isSyncin
             ].map((card, i) => (
               <div 
                 key={i} 
-                className={`p-6 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-white/5 text-center space-y-3 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 group cursor-pointer ${card.color}`}
+                className={`p-6 bg-slate-50 dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-white/5 text-center space-y-3 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 group cursor-pointer ${card.color}`}
                 onClick={() => {
                    if (card.label === 'Pill List') onNavigate?.('meds');
                    if (card.label === 'Progress') onNavigate?.('timeline');
@@ -106,13 +105,11 @@ const Home: React.FC<Props> = ({ medications, checkins, analysisResult, isSyncin
               >
                 <div className="text-4xl mb-2 group-hover:rotate-12 transition-transform duration-500">{card.icon}</div>
                 <h4 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tighter italic leading-none">{card.label}</h4>
-                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">{card.desc}</p>
+                <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed">{card.desc}</p>
               </div>
             ))}
           </div>
         </div>
-        
-        <Footer onOpenLegal={() => onNavigate?.('legal')} />
       </div>
     );
   }
@@ -135,12 +132,12 @@ const Home: React.FC<Props> = ({ medications, checkins, analysisResult, isSyncin
         
         <div className="lg:col-span-8 space-y-8">
           {/* Daily Status Card */}
-          <div className="bg-white dark:bg-slate-900 rounded-[3rem] p-10 md:p-14 border border-slate-100 dark:border-white/5 shadow-3xl relative overflow-hidden animate-in slide-in-from-left-8 duration-1000">
+          <div className="bg-slate-50 dark:bg-slate-900 rounded-[3rem] p-10 md:p-14 border border-slate-200 dark:border-white/5 shadow-3xl relative overflow-hidden animate-in slide-in-from-left-8 duration-1000">
             <div className="absolute top-0 right-0 p-16 opacity-5 pointer-events-none italic font-black text-9xl uppercase">News</div>
             <div className="space-y-6 relative z-10">
               <div className="flex items-center gap-4">
                  <div className="w-3 h-3 bg-emerald-500 rounded-full animate-ping"></div>
-                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Summary</span>
+                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Live Summary</span>
               </div>
               <p className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tighter leading-tight italic">
                 "{summary || "Everything is looking good! We are watching your pills to keep you safe."}"
@@ -166,10 +163,10 @@ const Home: React.FC<Props> = ({ medications, checkins, analysisResult, isSyncin
 
           {/* Quick Tips */}
           <div className="space-y-4">
-            <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-6">Smart Insights</h3>
+            <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-6">Smart Insights</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {smartAdvice.map((advice: string, i: number) => (
-                <div key={i} className="bg-slate-50 dark:bg-white/5 p-6 rounded-[2rem] border border-slate-100 dark:border-white/10 flex items-start gap-4 transition-all hover:bg-white dark:hover:bg-white/10 hover:shadow-xl group">
+                <div key={i} className="bg-slate-200/40 dark:bg-white/5 p-6 rounded-[2rem] border border-slate-300/40 dark:border-white/10 flex items-start gap-4 transition-all hover:bg-slate-50 dark:hover:bg-white/10 hover:shadow-xl group">
                   <div className="text-3xl group-hover:rotate-12 transition-transform duration-500">💡</div>
                   <p className="text-xs font-bold text-slate-700 dark:text-slate-300 italic leading-relaxed">"{advice}"</p>
                 </div>
@@ -180,11 +177,11 @@ const Home: React.FC<Props> = ({ medications, checkins, analysisResult, isSyncin
 
         {/* Health Score Sidebar */}
         <div className="lg:col-span-4 space-y-8">
-          <div className="bg-white dark:bg-slate-900 p-10 rounded-[4rem] border border-slate-100 dark:border-white/5 shadow-3xl text-center space-y-8">
-            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Stability Index</h4>
+          <div className="bg-slate-50 dark:bg-slate-900 p-10 rounded-[4rem] border border-slate-200 dark:border-white/5 shadow-3xl text-center space-y-8">
+            <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Stability Index</h4>
             <div className="relative w-48 h-48 mx-auto flex items-center justify-center">
                 <svg className="w-full h-full -rotate-90">
-                  <circle cx="96" cy="96" r="80" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-slate-100 dark:text-white/5" />
+                  <circle cx="96" cy="96" r="80" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-slate-200 dark:text-white/5" />
                   <circle 
                     cx="96" cy="96" r="80" 
                     stroke="currentColor" strokeWidth="12" 
@@ -199,7 +196,7 @@ const Home: React.FC<Props> = ({ medications, checkins, analysisResult, isSyncin
                   <span className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter">{(stabilityIndex * 100).toFixed(0)}%</span>
                 </div>
             </div>
-            <p className="text-xs font-bold text-slate-500 italic leading-relaxed px-4">
+            <p className="text-xs font-bold text-slate-600 italic leading-relaxed px-4">
               {stabilityIndex > 0.8 ? "Physiology is stable. Continue current protocol." : 
                stabilityIndex > 0.5 ? "Minor fluctuations. Observe and log data." : 
                "Alert: Significant variance detected."}

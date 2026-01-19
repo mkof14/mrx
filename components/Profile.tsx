@@ -92,23 +92,23 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Basic Biometrics */}
-        <div className="bg-white dark:bg-slate-900/50 p-10 rounded-[3.5rem] border border-slate-200 dark:border-white/5 space-y-8 shadow-xl">
+        <div className="bg-slate-50 dark:bg-slate-900/50 p-10 rounded-[3.5rem] border border-slate-200 dark:border-white/5 space-y-8 shadow-xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-clinical-500/10 rounded-2xl flex items-center justify-center text-2xl">🧬</div>
               <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">Biometrics</h3>
             </div>
             
-            <div className="flex p-1 bg-slate-100 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/10">
+            <div className="flex p-1 bg-slate-200/50 dark:bg-white/5 rounded-xl border border-slate-300/50 dark:border-white/10">
               <button 
                 onClick={() => setProfile({ ...profile, preferred_units: 'METRIC' })}
-                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${profile.preferred_units === 'METRIC' ? 'bg-white dark:bg-slate-800 text-clinical-600 shadow-sm' : 'text-slate-400'}`}
+                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${profile.preferred_units === 'METRIC' ? 'bg-white dark:bg-slate-800 text-clinical-600 shadow-sm' : 'text-slate-500'}`}
               >
                 Metric
               </button>
               <button 
                 onClick={() => setProfile({ ...profile, preferred_units: 'IMPERIAL' })}
-                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${profile.preferred_units === 'IMPERIAL' ? 'bg-white dark:bg-slate-800 text-clinical-600 shadow-sm' : 'text-slate-400'}`}
+                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${profile.preferred_units === 'IMPERIAL' ? 'bg-white dark:bg-slate-800 text-clinical-600 shadow-sm' : 'text-slate-500'}`}
               >
                 Imperial
               </button>
@@ -117,31 +117,31 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
           
           <div className="space-y-6">
             <div className="space-y-2">
-              <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest ml-4">Legal Name / Alias</label>
+              <label className="text-[9px] font-black uppercase text-slate-500 tracking-widest ml-4">Legal Name / Alias</label>
               <input 
                 type="text" 
                 value={profile.name || ''} 
                 onChange={e => setProfile({...profile, name: e.target.value})}
                 placeholder="How should Dr. BioMath address you?"
-                className="w-full bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-2xl p-4 font-bold text-sm outline-none focus:border-clinical-500 transition-all dark:text-white"
+                className="w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-4 font-bold text-sm outline-none focus:border-clinical-500 transition-all dark:text-white"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
                <div className="space-y-2">
-                 <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest ml-4">Age (Years)</label>
+                 <label className="text-[9px] font-black uppercase text-slate-500 tracking-widest ml-4">Age (Years)</label>
                  <input 
                    type="number" 
                    value={profile.age_years || ''} 
                    onChange={e => setProfile({...profile, age_years: parseInt(e.target.value) || 0})}
-                   className="w-full bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-2xl p-4 font-bold text-sm outline-none focus:border-clinical-500 transition-all dark:text-white"
+                   className="w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-4 font-bold text-sm outline-none focus:border-clinical-500 transition-all dark:text-white"
                  />
                </div>
                <div className="space-y-2">
-                 <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest ml-4">Sex</label>
+                 <label className="text-[9px] font-black uppercase text-slate-500 tracking-widest ml-4">Sex</label>
                  <select 
                    value={profile.sex_at_birth || 'UNKNOWN'} 
                    onChange={e => setProfile({...profile, sex_at_birth: e.target.value as any})}
-                   className="w-full bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-2xl p-4 font-bold text-sm outline-none dark:text-white"
+                   className="w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-4 font-bold text-sm outline-none dark:text-white"
                  >
                    <option value="MALE">Male</option>
                    <option value="FEMALE">Female</option>
@@ -151,25 +151,25 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
             </div>
             <div className="grid grid-cols-2 gap-4">
                <div className="space-y-2">
-                 <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest ml-4">
+                 <label className="text-[9px] font-black uppercase text-slate-500 tracking-widest ml-4">
                    Weight ({profile.preferred_units === 'METRIC' ? 'KG' : 'LBS'})
                  </label>
                  <input 
                    type="number" 
                    value={displayWeight} 
                    onChange={e => handleWeightChange(e.target.value)}
-                   className="w-full bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-2xl p-4 font-bold text-sm outline-none focus:border-clinical-500 transition-all dark:text-white"
+                   className="w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-4 font-bold text-sm outline-none focus:border-clinical-500 transition-all dark:text-white"
                  />
                </div>
                <div className="space-y-2">
-                 <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest ml-4">
+                 <label className="text-[9px] font-black uppercase text-slate-500 tracking-widest ml-4">
                    Height ({profile.preferred_units === 'METRIC' ? 'CM' : 'IN'})
                  </label>
                  <input 
                    type="number" 
                    value={displayHeight} 
                    onChange={e => handleHeightChange(e.target.value)}
-                   className="w-full bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-2xl p-4 font-bold text-sm outline-none focus:border-clinical-500 transition-all dark:text-white"
+                   className="w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-4 font-bold text-sm outline-none focus:border-clinical-500 transition-all dark:text-white"
                  />
                </div>
             </div>
@@ -177,71 +177,69 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
         </div>
 
         {/* Medical History */}
-        <div className="bg-white dark:bg-slate-900/50 p-10 rounded-[3.5rem] border border-slate-200 dark:border-white/5 space-y-8 shadow-xl">
+        <div className="bg-slate-50 dark:bg-slate-900/50 p-10 rounded-[3.5rem] border border-slate-200 dark:border-white/5 space-y-8 shadow-xl">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-clinical-500/10 rounded-2xl flex items-center justify-center text-2xl">📋</div>
             <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">Medical History</h3>
           </div>
           
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div className="space-y-4">
-              <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest ml-4">Pre-existing Conditions</label>
-              <div className="flex gap-2">
+              <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest ml-4">Pre-existing Conditions</label>
+              <div className="flex gap-3">
                 <input 
                   type="text" 
                   value={newCondition}
                   onChange={e => setNewCondition(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && addCondition()}
                   placeholder="e.g. Hypertension, Diabetes..."
-                  className="flex-1 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-2xl p-4 font-bold text-sm outline-none focus:border-clinical-500 dark:text-white"
+                  className="flex-1 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl px-6 py-4 font-bold text-sm outline-none focus:border-clinical-500 transition-all dark:text-white shadow-inner"
                 />
-                <button onClick={addCondition} className="px-6 bg-clinical-500 text-white rounded-2xl font-black text-xs">+</button>
+                <button 
+                  onClick={addCondition} 
+                  className="w-14 h-14 bg-clinical-600 text-white rounded-2xl font-black text-2xl shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center"
+                >
+                  +
+                </button>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 pt-2">
                 {profile.preexisting_conditions.map((c, i) => (
-                  <span key={i} className="px-4 py-2 bg-clinical-500/10 text-clinical-600 rounded-full text-[10px] font-black uppercase flex items-center gap-2">
+                  <span key={i} className="px-4 py-2 bg-clinical-500/10 text-clinical-600 dark:bg-clinical-500/20 dark:text-clinical-400 rounded-full text-[10px] font-black uppercase flex items-center gap-2 border border-clinical-500/10">
                     {c}
-                    <button onClick={() => removeCondition(i)} className="hover:text-red-500">×</button>
+                    <button onClick={() => removeCondition(i)} className="w-5 h-5 rounded-full hover:bg-clinical-500 hover:text-white flex items-center justify-center transition-colors">×</button>
                   </span>
                 ))}
               </div>
             </div>
 
             <div className="space-y-4">
-              <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest ml-4">Known Allergies</label>
-              <div className="flex gap-2">
+              <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest ml-4">Known Allergies</label>
+              <div className="flex gap-3">
                 <input 
                   type="text" 
                   value={newAllergy}
                   onChange={e => setNewAllergy(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && addAllergy()}
                   placeholder="e.g. Penicillin, Peanuts..."
-                  className="flex-1 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-2xl p-4 font-bold text-sm outline-none focus:border-clinical-500 dark:text-white"
+                  className="flex-1 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl px-6 py-4 font-bold text-sm outline-none focus:border-clinical-500 transition-all dark:text-white shadow-inner"
                 />
-                <button onClick={addAllergy} className="px-6 bg-clinical-500 text-white rounded-2xl font-black text-xs">+</button>
+                <button 
+                  onClick={addAllergy} 
+                  className="w-14 h-14 bg-rose-500 text-white rounded-2xl font-black text-2xl shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center"
+                >
+                  +
+                </button>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 pt-2">
                 {profile.known_allergies.map((a, i) => (
-                  <span key={i} className="px-4 py-2 bg-rose-500/10 text-rose-600 rounded-full text-[10px] font-black uppercase flex items-center gap-2">
+                  <span key={i} className="px-4 py-2 bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 rounded-full text-[10px] font-black uppercase flex items-center gap-2 border border-rose-500/10">
                     {a}
-                    <button onClick={() => removeAllergy(i)} className="hover:text-red-500">×</button>
+                    <button onClick={() => removeAllergy(i)} className="w-5 h-5 rounded-full hover:bg-rose-500 hover:text-white flex items-center justify-center transition-colors">×</button>
                   </span>
                 ))}
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      <div className="p-12 bg-clinical-600 text-white rounded-[4rem] text-center space-y-6">
-        <h3 className="text-2xl font-black uppercase tracking-tighter">Critical Profile Link</h3>
-        <p className="text-sm font-bold opacity-80 leading-relaxed italic max-w-2xl mx-auto">
-          These data are the foundation for the MRX safety algorithms. Without accurate indication of allergies and conditions, reports will be generic. Completing your profile ensures that every generated PDF report is valid for clinical use by your physician.
-        </p>
-        <div className="flex justify-center gap-2">
-           <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>
-           <div className="w-2 h-2 rounded-full bg-white/40"></div>
-           <div className="w-2 h-2 rounded-full bg-white/40"></div>
         </div>
       </div>
     </div>

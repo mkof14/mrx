@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Medication, SymptomEntry, UserProfile, Viewpoint, MedicationEvent } from './types';
 import { analyzeMedicationData } from './geminiService';
@@ -14,7 +13,6 @@ import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import BottomNav from './components/BottomNav';
 import HealthAssistant from './components/HealthAssistant';
-import CreativeStudio from './components/CreativeStudio';
 import LiveConsult from './components/LiveConsult';
 import Settings from './components/Settings';
 import Profile from './components/Profile';
@@ -194,7 +192,6 @@ const App: React.FC = () => {
       case 'home': return <Home medications={medications} checkins={checkins} analysisResult={analysisResult} isSyncing={isSyncing} onNavigateToReports={() => setActiveTab('reports')} stabilityIndex={stabilityIndex} onNavigate={setActiveTab} />;
       case 'assistant': return <HealthAssistant medications={medications} checkins={checkins} profile={profile} onUpdateProfile={setProfile} />;
       case 'live': return <LiveConsult profile={profile} onUpdateProfile={setProfile} />;
-      case 'studio': return <CreativeStudio />;
       case 'timeline': return <Timeline medications={medications} checkins={checkins} events={medicationEvents} theme={theme} />;
       case 'interactions': return <InteractionMap medications={medications} profile={profile} analysisResult={analysisResult} />;
       case 'meds': return <MedicationList medications={medications} setMedications={handleMedChange as any} medicationEvents={medicationEvents} setMedicationEvents={handleEventChange as any} onFirstMedAdded={() => setActiveTab('home')} />;
@@ -211,7 +208,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-transparent transition-colors duration-500 font-sans">
+    <div className="flex h-screen overflow-hidden bg-slate-100 dark:bg-slate-950 transition-colors duration-500 font-sans">
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
@@ -227,8 +224,8 @@ const App: React.FC = () => {
         </main>
         
         {/* Global Medical Observation Disclaimer */}
-        <div className="w-full text-center py-6 px-6 no-print bg-slate-50/50 dark:bg-slate-950/50 backdrop-blur-sm border-t border-slate-200/50 dark:border-white/5">
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 dark:text-slate-600 italic">
+        <div className="w-full text-center py-6 px-6 no-print bg-slate-200/30 dark:bg-slate-900/50 backdrop-blur-sm border-t border-slate-300/30 dark:border-white/5">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 dark:text-slate-600 italic">
             No medical advice. Just what’s happening.
           </p>
         </div>
