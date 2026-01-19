@@ -10,17 +10,25 @@ interface Props {
 
 const Onboarding: React.FC<Props> = ({ onComplete, theme, toggleTheme }) => {
   const [step, setStep] = useState(0); 
+  // Added missing required fields (id, email, preferred_units, preferred_voice, speech_speed, is_subscribed) 
+  // to satisfy the UserProfile interface and fix the type error.
   const [profile, setProfile] = useState<UserProfile>({
+    id: '',
+    email: '',
     name: '',
     age_years: 30,
     sex_at_birth: 'MALE',
     weight_kg: null,
     height_cm: null,
+    preferred_units: 'METRIC',
+    preferred_voice: 'Zephyr',
+    speech_speed: 1.0,
     pregnancy_possible: false,
     preexisting_conditions: [],
     known_allergies: [],
     goals: [],
-    onboarded: true
+    onboarded: true,
+    is_subscribed: false
   });
 
   const finish = () => {

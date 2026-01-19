@@ -18,13 +18,20 @@ const Header: React.FC<HeaderProps> = ({ profile, theme, toggleTheme, isSyncing 
         </div>
         <div className="hidden sm:block">
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tighter">MRX<span className="text-[#48c9b0]">.</span>HEALTH</h1>
+            <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tighter leading-tight">
+              MRX<span className="text-[#48c9b0]">.</span>HEALTH
+            </h1>
           </div>
-          <div className="flex items-center gap-1.5 mt-0.5">
-            <div className={`w-1.5 h-1.5 rounded-full ${isSyncing ? 'bg-clinical-500 animate-spin' : 'bg-[#48c9b0] animate-pulse'}`}></div>
-            <span className="text-[9px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.3em]">
-              {isSyncing ? 'Updating Data...' : 'Monitoring Active'}
+          <div className="flex flex-col">
+            <span className="text-[7px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-[0.3em] leading-none mb-1">
+              Medication Reactions eXplorer
             </span>
+            <div className="flex items-center gap-1.5">
+              <div className={`w-1.5 h-1.5 rounded-full ${isSyncing ? 'bg-clinical-500 animate-spin' : 'bg-[#48c9b0] animate-pulse'}`}></div>
+              <span className="text-[8px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.3em]">
+                {isSyncing ? 'Updating Data...' : 'Monitoring Active'}
+              </span>
+            </div>
           </div>
         </div>
       </div>

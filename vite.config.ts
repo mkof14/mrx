@@ -2,11 +2,9 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   define: {
-    // Позволяет коду обращаться к API_KEY через process.env.API_KEY
     'process.env.API_KEY': JSON.stringify(process.env.API_KEY)
   },
   server: {
@@ -17,8 +15,16 @@ export default defineConfig({
     outDir: 'dist',
     target: 'esnext',
     minify: 'esbuild',
+    cssCodeSplit: true,
     rollupOptions: {
-      input: './index.html'
+      input: './index.html',
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-charts': ['recharts'],
+          'vendor-genai': ['@google/genai']
+        }
+      }
     }
   }
 });

@@ -9,7 +9,7 @@ import Timeline from './components/Timeline';
 import InteractionMap from './components/InteractionMap';
 import ReportBuilder from './components/ReportBuilder';
 import SafetyCenter from './components/SafetyCenter';
-import Onboarding from './components/Onboarding';
+import AccountSetup from './components/AccountSetup';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import BottomNav from './components/BottomNav';
@@ -19,9 +19,10 @@ import LiveConsult from './components/LiveConsult';
 import Settings from './components/Settings';
 import Profile from './components/Profile';
 import Auth from './components/Auth';
-import Pricing from './components/Pricing';
 import Footer from './components/Footer';
 import Legal from './components/Legal';
+import FAQ from './components/FAQ';
+import SystemDiagnostics from './components/SystemDiagnostics';
 import { calculateStabilityIndex } from './utils/analytics';
 import { INITIAL_SCORES } from './constants';
 
@@ -31,6 +32,7 @@ const App: React.FC = () => {
   });
   
   const [activeTab, setActiveTab] = useState('home');
+  const [legalSection, setLegalSection] = useState('privacy');
   const [isSyncing, setIsSyncing] = useState(false);
   const [stabilityIndex, setStabilityIndex] = useState(1.0);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -174,25 +176,23 @@ const App: React.FC = () => {
     setProfile(p => ({ ...p, email }));
   };
 
-  const handleSubscribe = () => {
-    setProfile(p => ({ ...p, is_subscribed: true }));
+  const handleOpenLegal = (section: string = 'privacy') => {
+    setLegalSection(section);
+    setActiveTab('legal');
   };
 
   // Auth Flow
   if (!isAuthenticated) return <Auth onLogin={handleLogin} theme={theme} toggleTheme={toggleTheme} />;
   
-  // Pricing Flow
-  if (!profile.is_subscribed) return <Pricing onSubscribe={handleSubscribe} />;
-
-  // Onboarding Flow
-  if (!profile.onboarded) {
-    return <Onboarding theme={theme} toggleTheme={toggleTheme} onComplete={(p) => setProfile({ ...profile, ...p, onboarded: true })} />;
+  // Setup Flow (Unified Pricing + Onboarding)
+  if (!profile.is_subscribed || !profile.onboarded) {
+    return <AccountSetup theme={theme} toggleTheme={toggleTheme} onComplete={(p) => setProfile(p)} />;
   }
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'home': return <Home medications={medications} checkins={checkins} analysisResult={analysisResult} isSyncing={isSyncing} onNavigateToReports={() => setActiveTab('reports')} stabilityIndex={stabilityIndex} />;
-      case 'assistant': return <HealthAssistant medications={medications} checkins={checkins} profile={profile} />;
+      case 'home': return <Home medications={medications} checkins={checkins} analysisResult={analysisResult} isSyncing={isSyncing} onNavigateToReports={() => setActiveTab('reports')} stabilityIndex={stabilityIndex} onNavigate={setActiveTab} />;
+      case 'assistant': return <HealthAssistant medications={medications} checkins={checkins} profile={profile} onUpdateProfile={setProfile} />;
       case 'live': return <LiveConsult profile={profile} onUpdateProfile={setProfile} />;
       case 'studio': return <CreativeStudio />;
       case 'timeline': return <Timeline medications={medications} checkins={checkins} events={medicationEvents} theme={theme} />;
@@ -203,8 +203,10 @@ const App: React.FC = () => {
       case 'safety': return <SafetyCenter checkins={checkins} medications={medications} />;
       case 'profile': return <Profile profile={profile} setProfile={setProfile} />;
       case 'settings': return <Settings profile={profile} setProfile={setProfile} theme={theme} toggleTheme={toggleTheme} clearAllData={clearAllData} />;
-      case 'legal': return <Legal />;
-      default: return <Home medications={medications} checkins={checkins} analysisResult={analysisResult} isSyncing={isSyncing} onNavigateToReports={() => setActiveTab('reports')} stabilityIndex={stabilityIndex} />;
+      case 'legal': return <Legal initialSection={legalSection} />;
+      case 'faq': return <FAQ />;
+      case 'diagnostics': return <SystemDiagnostics />;
+      default: return <Home medications={medications} checkins={checkins} analysisResult={analysisResult} isSyncing={isSyncing} onNavigateToReports={() => setActiveTab('reports')} stabilityIndex={stabilityIndex} onNavigate={setActiveTab} />;
     }
   };
 
@@ -219,11 +221,19 @@ const App: React.FC = () => {
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         <Header profile={profile} theme={theme} toggleTheme={toggleTheme} isSyncing={isSyncing} />
         <main className="flex-1 p-0">
-          <div className="max-w-7xl mx-auto pb-32">
+          <div className="max-w-7xl mx-auto pb-8">
             {renderContent()}
           </div>
         </main>
-        <Footer />
+        
+        {/* Global Medical Observation Disclaimer */}
+        <div className="w-full text-center py-6 px-6 no-print bg-slate-50/50 dark:bg-slate-950/50 backdrop-blur-sm border-t border-slate-200/50 dark:border-white/5">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 dark:text-slate-600 italic">
+            No medical advice. Just what’s happening.
+          </p>
+        </div>
+
+        <Footer onOpenLegal={handleOpenLegal} onOpenFAQ={() => setActiveTab('faq')} />
       </div>
       <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
     </div>

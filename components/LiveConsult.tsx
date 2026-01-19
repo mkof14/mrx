@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { connectLiveSession } from '../geminiService';
 import { UserProfile, AIVoice } from '../types';
 import SectionHero from './SectionHero';
+import { decodeBase64, encodeBase64, decodeAudioData } from '../utils/audio';
 
 interface LiveConsultProps {
   profile: UserProfile;
@@ -35,45 +36,11 @@ const LiveConsult: React.FC<LiveConsultProps> = ({ profile, onUpdateProfile }) =
   
   const audioContextRef = useRef<AudioContext | null>(null);
   const outputNodeRef = useRef<GainNode | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
   const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
   const nextStartTimeRef = useRef<number>(0);
   const activeSessionRef = useRef<any>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   
   const currentTranscriptionsRef = useRef({ user: '', doctor: '' });
-
-  function decode(base64: string) {
-    const binaryString = atob(base64);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-    return bytes;
-  }
-
-  function encode(bytes: Uint8Array) {
-    let binary = '';
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary);
-  }
-
-  async function decodeAudioData(data: Uint8Array, ctx: AudioContext, sampleRate: number, numChannels: number): Promise<AudioBuffer> {
-    const dataInt16 = new Int16Array(data.buffer);
-    const frameCount = dataInt16.length / numChannels;
-    const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
-    for (let channel = 0; channel < numChannels; channel++) {
-      const channelData = buffer.getChannelData(channel);
-      for (let i = 0; i < frameCount; i++) {
-        channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
-      }
-    }
-    return buffer;
-  }
 
   const stopSession = () => {
     if (activeSessionRef.current) activeSessionRef.current.close();
@@ -106,7 +73,7 @@ const LiveConsult: React.FC<LiveConsultProps> = ({ profile, onUpdateProfile }) =
             const l = inputData.length;
             const int16 = new Int16Array(l);
             for (let i = 0; i < l; i++) int16[i] = inputData[i] * 32768;
-            const pcmBlob = { data: encode(new Uint8Array(int16.buffer)), mimeType: 'audio/pcm;rate=16000' };
+            const pcmBlob = { data: encodeBase64(new Uint8Array(int16.buffer)), mimeType: 'audio/pcm;rate=16000' };
             if (activeSessionRef.current) activeSessionRef.current.sendRealtimeInput({ media: pcmBlob });
           };
           source.connect(scriptProcessor);
@@ -122,12 +89,15 @@ const LiveConsult: React.FC<LiveConsultProps> = ({ profile, onUpdateProfile }) =
           const base64 = msg.serverContent?.modelTurn?.parts[0]?.inlineData.data;
           if (base64 && audioContextRef.current) {
             nextStartTimeRef.current = Math.max(nextStartTimeRef.current, audioContextRef.current.currentTime);
-            const buffer = await decodeAudioData(decode(base64), audioContextRef.current, 24000, 1);
+            const buffer = await decodeAudioData(decodeBase64(base64), audioContextRef.current, 24000, 1);
             const source = audioContextRef.current.createBufferSource();
             source.buffer = buffer;
+            // Apply custom speaking speed
+            source.playbackRate.value = profile.speech_speed;
             source.connect(outputNodeRef.current!);
             source.start(nextStartTimeRef.current);
-            nextStartTimeRef.current += buffer.duration;
+            // Adjust duration based on speed for proper scheduling
+            nextStartTimeRef.current += (buffer.duration / profile.speech_speed);
             sourcesRef.current.add(source);
             source.onended = () => sourcesRef.current.delete(source);
           }
@@ -143,25 +113,85 @@ const LiveConsult: React.FC<LiveConsultProps> = ({ profile, onUpdateProfile }) =
     } catch (err) { setStatus('Hardware Access Denied'); }
   };
 
+  const voices: AIVoice[] = ['Zephyr', 'Puck', 'Charon', 'Kore', 'Fenrir'];
+  const speeds = [0.75, 1.0, 1.25, 1.5];
+
   return (
     <div className="animate-slide-up pb-32">
       <SectionHero title="Live Consult" subtitle="Neural Triage Dialogue" icon="🎙️" color="#0ea5e9" />
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 px-6">
-        <div className="lg:col-span-5 bg-[#020617] rounded-[5rem] p-12 flex flex-col items-center justify-center space-y-10 border border-white/5">
-          <AICoreAvatar isActive={isActive} volume={volumeLevel} />
-          <p className="text-white text-2xl font-black uppercase tracking-tighter">{status}</p>
-          {!isActive ? (
-            <button onClick={startSession} className="bg-white text-slate-950 px-12 py-6 rounded-[2.5rem] font-black uppercase tracking-[0.4em] shadow-2xl">Start Session</button>
-          ) : (
-            <button onClick={stopSession} className="bg-rose-600 text-white px-12 py-6 rounded-[2.5rem] font-black uppercase tracking-[0.4em]">End Session</button>
-          )}
+      
+      <div className="max-w-6xl mx-auto px-6 mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Voice Selection */}
+        <div className="bg-white dark:bg-slate-900 p-8 rounded-[3rem] border border-slate-200 dark:border-white/5 shadow-xl flex flex-col md:flex-row items-center gap-6">
+          <div className="space-y-1 text-center md:text-left">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Consultant Voice</h4>
+            <p className="text-[9px] font-bold text-slate-500 uppercase italic">Select personality core</p>
+          </div>
+          <div className="flex flex-wrap gap-2 justify-center">
+            {voices.map(v => (
+              <button 
+                key={v}
+                disabled={isActive}
+                onClick={() => onUpdateProfile({ ...profile, preferred_voice: v })}
+                className={`px-4 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest border transition-all ${profile.preferred_voice === v ? 'bg-clinical-600 border-clinical-600 text-white shadow-lg' : 'bg-slate-50 dark:bg-white/5 border-transparent text-slate-500'}`}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="lg:col-span-7 bg-white dark:bg-slate-900/50 rounded-[5rem] border border-slate-200 dark:border-white/5 h-[600px] flex flex-col overflow-hidden">
-           <div className="p-10 border-b border-slate-100 dark:border-white/5 font-black uppercase tracking-[0.4em] text-slate-400">Biological Transcript</div>
+
+        {/* Speed Selection */}
+        <div className="bg-white dark:bg-slate-900 p-8 rounded-[3rem] border border-slate-200 dark:border-white/5 shadow-xl flex flex-col md:flex-row items-center gap-6">
+          <div className="space-y-1 text-center md:text-left">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Diction Speed</h4>
+            <p className="text-[9px] font-bold text-slate-500 uppercase italic">Adjust temporal flow</p>
+          </div>
+          <div className="flex gap-2">
+            {speeds.map(s => (
+              <button 
+                key={s}
+                onClick={() => onUpdateProfile({ ...profile, speech_speed: s })}
+                className={`w-12 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest border transition-all ${profile.speech_speed === s ? 'bg-clinical-600 border-clinical-600 text-white shadow-lg' : 'bg-slate-50 dark:bg-white/5 border-transparent text-slate-500'}`}
+              >
+                {s}x
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 px-6">
+        <div className="lg:col-span-5 bg-[#020617] rounded-[5rem] p-12 flex flex-col items-center justify-center space-y-10 border border-white/5 relative overflow-hidden">
+          <AICoreAvatar isActive={isActive} volume={volumeLevel} />
+          <p className="text-white text-2xl font-black uppercase tracking-tighter z-10">{status}</p>
+          <div className="flex flex-col gap-4 w-full z-10">
+            {!isActive ? (
+              <button onClick={startSession} className="bg-white text-slate-950 px-12 py-6 rounded-[2.5rem] font-black uppercase tracking-[0.4em] shadow-2xl hover:scale-105 active:scale-95 transition-all">Start Session</button>
+            ) : (
+              <button onClick={stopSession} className="bg-rose-600 text-white px-12 py-6 rounded-[2.5rem] font-black uppercase tracking-[0.4em] hover:scale-105 active:scale-95 transition-all">End Session</button>
+            )}
+          </div>
+        </div>
+        <div className="lg:col-span-7 bg-white dark:bg-slate-900/50 rounded-[5rem] border border-slate-200 dark:border-white/5 h-[600px] flex flex-col overflow-hidden shadow-2xl">
+           <div className="p-10 border-b border-slate-100 dark:border-white/5 font-black uppercase tracking-[0.4em] text-slate-400 flex justify-between items-center">
+             <span>Biological Transcript</span>
+             <div className="flex gap-2">
+               <div className="w-2 h-2 rounded-full bg-clinical-500 animate-pulse"></div>
+               <div className="w-2 h-2 rounded-full bg-clinical-500/50 animate-pulse [animation-delay:0.2s]"></div>
+             </div>
+           </div>
            <div className="flex-1 overflow-y-auto p-12 space-y-8 custom-scrollbar">
+              {transcriptions.length === 0 && !isActive && (
+                <div className="h-full flex flex-col items-center justify-center opacity-20 text-slate-400 space-y-4">
+                  <span className="text-6xl">📡</span>
+                  <p className="text-[10px] font-black uppercase tracking-widest">Awaiting Neural Link</p>
+                </div>
+              )}
               {transcriptions.map((t, i) => (
-                <div key={i} className={`flex ${t.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[80%] p-6 rounded-[2rem] font-bold text-sm leading-relaxed ${t.role === 'user' ? 'bg-clinical-600 text-white' : 'bg-slate-100 dark:bg-white/5 text-slate-900 dark:text-white'}`}>
+                <div key={i} className={`flex ${t.role === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2 duration-300`}>
+                  <div className={`max-w-[80%] p-8 rounded-[2.5rem] font-bold text-sm leading-relaxed shadow-sm ${t.role === 'user' ? 'bg-clinical-600 text-white' : 'bg-slate-100 dark:bg-white/5 text-slate-900 dark:text-white'}`}>
+                    <p className="text-[8px] font-black uppercase tracking-widest mb-2 opacity-50">{t.role === 'user' ? 'Patient' : profile.preferred_voice}</p>
                     {t.text}
                   </div>
                 </div>

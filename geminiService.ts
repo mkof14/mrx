@@ -6,7 +6,6 @@ const MRX_VISUAL_STYLE = "Clinical high-tech biological art, futuristic medical 
 
 /**
  * BioMath Core — MRX Analysis Engine
- * High-precision pharmacological analysis using thinking budget for complex reasoning.
  */
 export async function analyzeMedicationData(
   medications: any[], 
@@ -162,6 +161,33 @@ export async function getAssistantResponseStream(query: string, context: { medic
 }
 
 /**
+ * Text-to-Speech (TTS) Generation
+ */
+export async function generateSpeech(text: string, voice: string = 'Zephyr') {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash-preview-tts",
+      contents: [{ parts: [{ text: `Clinical Report: ${text}` }] }],
+      config: {
+        responseModalities: [Modality.AUDIO],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: voice },
+          },
+        },
+      },
+    });
+    // Correctly accessing text property from candidates
+    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    return base64Audio;
+  } catch (error) {
+    console.error("TTS Generation Failure:", error);
+    return null;
+  }
+}
+
+/**
  * High-Resolution Bio-Art Generator
  */
 export async function generateHealthImage(prompt: string, size: "1K"|"2K"|"4K" = "1K", aspectRatio: string = "1:1") {
@@ -175,7 +201,7 @@ export async function generateHealthImage(prompt: string, size: "1K"|"2K"|"4K" =
         imageConfig: { aspectRatio: aspectRatio as any, imageSize: size }
       }
     });
-    for (const part of response.candidates?.[0].content.parts || []) {
+    for (const part of response.candidates?.[0]?.content?.parts || []) {
       if (part.inlineData) return `data:image/png;base64,${part.inlineData.data}`;
     }
     return null;
@@ -198,7 +224,7 @@ export async function editHealthImage(base64: string, prompt: string) {
         ]
       }
     });
-    for (const part of response.candidates?.[0].content.parts || []) {
+    for (const part of response.candidates?.[0]?.content?.parts || []) {
       if (part.inlineData) return `data:image/png;base64,${part.inlineData.data}`;
     }
     return null;

@@ -20,6 +20,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed,
     { id: 'checkin', label: 'HOW I FEEL', icon: '📝', color: '#f59e0b' },
     { id: 'reports', label: 'FOR DOCTOR', icon: '📋', color: '#f43f5e' },
     { id: 'safety', label: 'EMERGENCY', icon: '🚨', color: '#ef4444' },
+    { id: 'diagnostics', label: 'SYSTEM HEALTH', icon: '📡', color: '#34d399' },
     { id: 'settings', label: 'SETTINGS', icon: '⚙️', color: '#64748b' },
     { id: 'legal', label: 'LEGAL', icon: '⚖️', color: '#94a3b8' },
   ];
@@ -76,7 +77,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed,
                 {item.icon}
               </span>
 
-              {/* Label - Ultra Condensed Style (Extreme scale-x) */}
+              {/* Label */}
               {!isCollapsed && (
                 <span 
                   className={`font-black text-[9px] tracking-tighter uppercase origin-left transition-all duration-300 scale-x-[0.75] whitespace-nowrap ${

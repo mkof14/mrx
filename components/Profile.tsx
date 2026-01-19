@@ -100,7 +100,6 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
               <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">Biometrics</h3>
             </div>
             
-            {/* Unit Matrix Switcher */}
             <div className="flex p-1 bg-slate-100 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/10">
               <button 
                 onClick={() => setProfile({ ...profile, preferred_units: 'METRIC' })}
@@ -124,7 +123,7 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
                 type="text" 
                 value={profile.name || ''} 
                 onChange={e => setProfile({...profile, name: e.target.value})}
-                placeholder="How should Dr. BioMath address you?"
+                placeholder="Как доктор должен к вам обращаться?"
                 className="w-full bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-2xl p-4 font-bold text-sm outline-none focus:border-clinical-500 transition-all dark:text-white"
               />
             </div>
@@ -236,9 +235,9 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
       </div>
 
       <div className="p-12 bg-clinical-600 text-white rounded-[4rem] text-center space-y-6">
-        <h3 className="text-2xl font-black uppercase tracking-tighter">Profile Integrity</h3>
+        <h3 className="text-2xl font-black uppercase tracking-tighter">Критическая Связь Профиля</h3>
         <p className="text-sm font-bold opacity-80 leading-relaxed italic max-w-2xl mx-auto">
-          "This data serves as the foundation for all MRX neural synthesis. Dr. BioMath and the Health Companion use this context to cross-reference every symptom and medication for personalized risk mitigation."
+          Эти данные являются основой для алгоритмов безопасности MRX. Без точного указания аллергий и условий отчеты будут носить общий характер. Заполнение профиля гарантирует, что каждый PDF-отчет будет валиден для клинического использования вашим врачом.
         </p>
         <div className="flex justify-center gap-2">
            <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>

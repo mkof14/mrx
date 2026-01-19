@@ -15,6 +15,11 @@ const Settings: React.FC<SettingsProps> = ({ profile, setProfile, theme, toggleT
   const voices: AIVoice[] = ['Zephyr', 'Puck', 'Charon', 'Kore', 'Fenrir'];
   const speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
 
+  const handleVercelDeploy = () => {
+    const repoUrl = window.location.origin; // Simplified for demo
+    window.open(`https://vercel.com/new/clone?repository-url=${encodeURIComponent(repoUrl)}&env=API_KEY&project-name=mrx-health-instance&repository-name=mrx-health`, '_blank');
+  };
+
   return (
     <div className="animate-slide-up pb-32">
       <SectionHero 
@@ -71,14 +76,41 @@ const Settings: React.FC<SettingsProps> = ({ profile, setProfile, theme, toggleT
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 p-10 rounded-[3.5rem] border border-slate-200 dark:border-white/5 shadow-2xl space-y-8">
-          <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">Privacy</h3>
-          <button onClick={() => confirm("Erase all biological data?") && clearAllData()} className="w-full py-5 rounded-2xl bg-rose-500/10 text-rose-600 font-black text-[9px] uppercase tracking-widest border border-rose-500/20">Clear Local Cache</button>
+        {/* Vercel Deployment Hub */}
+        <div className="md:col-span-2 bg-white dark:bg-slate-900 p-12 rounded-[4rem] border border-slate-200 dark:border-white/5 shadow-2xl space-y-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-black/5 dark:bg-white/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="space-y-4 text-center md:text-left">
+              <h3 className="text-3xl font-black uppercase tracking-tighter italic text-slate-900 dark:text-white">Deployment Hub</h3>
+              <p className="text-sm font-bold text-slate-500 dark:text-slate-400 max-w-lg leading-relaxed italic">
+                Ready to take MRX.Health private? Deploy your own instance to Vercel in seconds. Ensure you have your Google AI API Key ready for the environment variables.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <span className="px-3 py-1 bg-slate-100 dark:bg-white/5 rounded-full text-[8px] font-black uppercase text-slate-400 border border-slate-200 dark:border-white/10">SPA Ready</span>
+                <span className="px-3 py-1 bg-slate-100 dark:bg-white/5 rounded-full text-[8px] font-black uppercase text-slate-400 border border-slate-200 dark:border-white/10">Edge Optimized</span>
+                <span className="px-3 py-1 bg-slate-100 dark:bg-white/5 rounded-full text-[8px] font-black uppercase text-slate-400 border border-slate-200 dark:border-white/10">Env: API_KEY</span>
+              </div>
+            </div>
+            <button 
+              onClick={handleVercelDeploy}
+              className="bg-black dark:bg-white text-white dark:text-black px-10 py-6 rounded-3xl font-black text-[10px] uppercase tracking-[0.3em] flex items-center gap-3 shadow-2xl hover:scale-105 active:scale-95 transition-all"
+            >
+              <svg width="20" height="20" viewBox="0 0 76 65" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M37.5274 0L75.0548 65H0L37.5274 0Z" fill="currentColor"/>
+              </svg>
+              Deploy to Vercel
+            </button>
+          </div>
         </div>
 
-        <div className="md:col-span-2 bg-slate-900 p-12 rounded-[4rem] text-white border border-white/5 shadow-2xl">
+        <div className="bg-white dark:bg-slate-900 p-10 rounded-[3.5rem] border border-slate-200 dark:border-white/5 shadow-2xl space-y-8">
+          <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">Privacy & Local Cache</h3>
+          <button onClick={() => confirm("Erase all biological data from local storage?") && clearAllData()} className="w-full py-5 rounded-2xl bg-rose-500/10 text-rose-600 font-black text-[9px] uppercase tracking-widest border border-rose-500/20 hover:bg-rose-500 hover:text-white transition-all">Clear All Local Data</button>
+        </div>
+
+        <div className="bg-slate-900 p-12 rounded-[4rem] text-white border border-white/5 shadow-2xl">
            <h4 className="text-3xl font-black uppercase tracking-tighter mb-4 italic">Enterprise Sync</h4>
-           <p className="text-xs font-bold text-slate-500 italic uppercase tracking-widest">Coming soon: BioMath Portal access for verified clinicians.</p>
+           <p className="text-xs font-bold text-slate-500 italic uppercase tracking-widest">Coming soon: BioMath Portal access for verified clinicians and hospital networks.</p>
         </div>
       </div>
     </div>
