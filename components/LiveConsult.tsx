@@ -1,0 +1,176 @@
+
+import React, { useState, useEffect, useRef } from 'react';
+import { connectLiveSession } from '../geminiService';
+import { UserProfile, AIVoice } from '../types';
+import SectionHero from './SectionHero';
+
+interface LiveConsultProps {
+  profile: UserProfile;
+  onUpdateProfile: (p: UserProfile) => void;
+}
+
+const AICoreAvatar: React.FC<{ isActive: boolean, volume: number }> = ({ isActive, volume }) => {
+  return (
+    <div className="relative flex items-center justify-center w-64 h-64">
+      <div className={`absolute inset-0 rounded-full blur-[100px] transition-all duration-700 ${isActive ? 'opacity-40' : 'opacity-10'}`} 
+           style={{ 
+             background: `conic-gradient(from 0deg, #3b82f6, #10b981, #8b5cf6, #3b82f6)`,
+             transform: `rotate(${volume}deg) scale(${1 + volume/100})`
+           }} />
+      <div className={`relative z-10 w-48 h-48 rounded-full bg-slate-900 border-4 border-white/5 flex items-center justify-center shadow-2xl transition-all ${isActive ? 'scale-110' : 'scale-100'}`}>
+         <div className={`w-32 h-32 rounded-full border-2 border-clinical-500/30 flex items-center justify-center ${isActive ? 'animate-spin-slow' : ''}`}>
+            <span className="text-6xl">{isActive ? '🌀' : '💤'}</span>
+         </div>
+      </div>
+    </div>
+  );
+};
+
+const LiveConsult: React.FC<LiveConsultProps> = ({ profile, onUpdateProfile }) => {
+  const [isActive, setIsActive] = useState(false);
+  const [status, setStatus] = useState('Diagnostic Standby');
+  const [micMuted, setMicMuted] = useState(false);
+  const [volumeLevel, setVolumeLevel] = useState(0);
+  const [transcriptions, setTranscriptions] = useState<{role: 'user'|'doctor', text: string}[]>([]);
+  
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const outputNodeRef = useRef<GainNode | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
+  const nextStartTimeRef = useRef<number>(0);
+  const activeSessionRef = useRef<any>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  
+  const currentTranscriptionsRef = useRef({ user: '', doctor: '' });
+
+  function decode(base64: string) {
+    const binaryString = atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
+  }
+
+  function encode(bytes: Uint8Array) {
+    let binary = '';
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+  }
+
+  async function decodeAudioData(data: Uint8Array, ctx: AudioContext, sampleRate: number, numChannels: number): Promise<AudioBuffer> {
+    const dataInt16 = new Int16Array(data.buffer);
+    const frameCount = dataInt16.length / numChannels;
+    const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
+    for (let channel = 0; channel < numChannels; channel++) {
+      const channelData = buffer.getChannelData(channel);
+      for (let i = 0; i < frameCount; i++) {
+        channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
+      }
+    }
+    return buffer;
+  }
+
+  const stopSession = () => {
+    if (activeSessionRef.current) activeSessionRef.current.close();
+    if (audioContextRef.current) audioContextRef.current.close();
+    setIsActive(false);
+    setStatus('Diagnostic Standby');
+    sourcesRef.current.forEach(s => s.stop());
+    sourcesRef.current.clear();
+  };
+
+  const startSession = async () => {
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+      audioContextRef.current = audioCtx;
+      outputNodeRef.current = audioCtx.createGain();
+      outputNodeRef.current.connect(audioCtx.destination);
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const inputCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
+      
+      activeSessionRef.current = connectLiveSession({
+        onopen: () => {
+          setStatus('Biological Stream Active');
+          setIsActive(true);
+          const source = inputCtx.createMediaStreamSource(stream);
+          const scriptProcessor = inputCtx.createScriptProcessor(4096, 1, 1);
+          scriptProcessor.onaudioprocess = (e) => {
+            if (micMuted) return;
+            const inputData = e.inputBuffer.getChannelData(0);
+            const l = inputData.length;
+            const int16 = new Int16Array(l);
+            for (let i = 0; i < l; i++) int16[i] = inputData[i] * 32768;
+            const pcmBlob = { data: encode(new Uint8Array(int16.buffer)), mimeType: 'audio/pcm;rate=16000' };
+            if (activeSessionRef.current) activeSessionRef.current.sendRealtimeInput({ media: pcmBlob });
+          };
+          source.connect(scriptProcessor);
+          scriptProcessor.connect(inputCtx.destination);
+        },
+        onmessage: async (msg: any) => {
+          if (msg.serverContent?.inputTranscription) currentTranscriptionsRef.current.user += msg.serverContent.inputTranscription.text;
+          if (msg.serverContent?.outputTranscription) currentTranscriptionsRef.current.doctor += msg.serverContent.outputTranscription.text;
+          if (msg.serverContent?.turnComplete) {
+            setTranscriptions(prev => [...prev, {role: 'user', text: currentTranscriptionsRef.current.user}, {role: 'doctor', text: currentTranscriptionsRef.current.doctor}]);
+            currentTranscriptionsRef.current = { user: '', doctor: '' };
+          }
+          const base64 = msg.serverContent?.modelTurn?.parts[0]?.inlineData.data;
+          if (base64 && audioContextRef.current) {
+            nextStartTimeRef.current = Math.max(nextStartTimeRef.current, audioContextRef.current.currentTime);
+            const buffer = await decodeAudioData(decode(base64), audioContextRef.current, 24000, 1);
+            const source = audioContextRef.current.createBufferSource();
+            source.buffer = buffer;
+            source.connect(outputNodeRef.current!);
+            source.start(nextStartTimeRef.current);
+            nextStartTimeRef.current += buffer.duration;
+            sourcesRef.current.add(source);
+            source.onended = () => sourcesRef.current.delete(source);
+          }
+          if (msg.serverContent?.interrupted) {
+            sourcesRef.current.forEach(s => s.stop());
+            sourcesRef.current.clear();
+            nextStartTimeRef.current = 0;
+          }
+        },
+        onerror: () => stopSession(),
+        onclose: () => stopSession()
+      }, profile);
+    } catch (err) { setStatus('Hardware Access Denied'); }
+  };
+
+  return (
+    <div className="animate-slide-up pb-32">
+      <SectionHero title="Live Consult" subtitle="Neural Triage Dialogue" icon="🎙️" color="#0ea5e9" />
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 px-6">
+        <div className="lg:col-span-5 bg-[#020617] rounded-[5rem] p-12 flex flex-col items-center justify-center space-y-10 border border-white/5">
+          <AICoreAvatar isActive={isActive} volume={volumeLevel} />
+          <p className="text-white text-2xl font-black uppercase tracking-tighter">{status}</p>
+          {!isActive ? (
+            <button onClick={startSession} className="bg-white text-slate-950 px-12 py-6 rounded-[2.5rem] font-black uppercase tracking-[0.4em] shadow-2xl">Start Session</button>
+          ) : (
+            <button onClick={stopSession} className="bg-rose-600 text-white px-12 py-6 rounded-[2.5rem] font-black uppercase tracking-[0.4em]">End Session</button>
+          )}
+        </div>
+        <div className="lg:col-span-7 bg-white dark:bg-slate-900/50 rounded-[5rem] border border-slate-200 dark:border-white/5 h-[600px] flex flex-col overflow-hidden">
+           <div className="p-10 border-b border-slate-100 dark:border-white/5 font-black uppercase tracking-[0.4em] text-slate-400">Biological Transcript</div>
+           <div className="flex-1 overflow-y-auto p-12 space-y-8 custom-scrollbar">
+              {transcriptions.map((t, i) => (
+                <div key={i} className={`flex ${t.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[80%] p-6 rounded-[2rem] font-bold text-sm leading-relaxed ${t.role === 'user' ? 'bg-clinical-600 text-white' : 'bg-slate-100 dark:bg-white/5 text-slate-900 dark:text-white'}`}>
+                    {t.text}
+                  </div>
+                </div>
+              ))}
+           </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default LiveConsult;

@@ -1,0 +1,9 @@
+{
+  "name": "BioMath Core — Medication Reaction (MRX)",
+  "description": "A clinical-grade medication safety and symptom tracking system that analyzes correlations, drug interactions, and potential side effects across multiple viewpoints (Conservative, Balanced, Exploratory).",
+  "requestFramePermissions": [
+    "geolocation",
+    "camera",
+    "microphone"
+  ]
+}
