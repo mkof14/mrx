@@ -7,6 +7,18 @@ interface ProfileProps {
   setProfile: (p: UserProfile) => void;
 }
 
+const COMMON_CONDITIONS = [
+  "Hypertension", "Type 2 Diabetes", "Asthma", "Anxiety", 
+  "Depression", "GERD", "Arthritis", "Hypothyroidism",
+  "Sleep Apnea", "Migraine", "ADHD", "IBS"
+];
+
+const COMMON_ALLERGIES = [
+  "Penicillin", "Sulfa Drugs", "Aspirin", "NSAIDs",
+  "Peanuts", "Dairy", "Shellfish", "Latex",
+  "Pollen", "Mold", "Codeine", "Lactose"
+];
+
 const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
   const [newCondition, setNewCondition] = useState('');
   const [newAllergy, setNewAllergy] = useState('');
@@ -49,11 +61,12 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
     setProfile({ ...profile, height_cm: finalCm });
   };
 
-  const addCondition = () => {
-    if (newCondition.trim()) {
+  const addCondition = (conditionName: string) => {
+    const trimmed = conditionName.trim();
+    if (trimmed && !profile.preexisting_conditions.includes(trimmed)) {
       setProfile({
         ...profile,
-        preexisting_conditions: [...profile.preexisting_conditions, newCondition.trim()]
+        preexisting_conditions: [...profile.preexisting_conditions, trimmed]
       });
       setNewCondition('');
     }
@@ -65,11 +78,12 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
     setProfile({ ...profile, preexisting_conditions: updated });
   };
 
-  const addAllergy = () => {
-    if (newAllergy.trim()) {
+  const addAllergy = (allergyName: string) => {
+    const trimmed = allergyName.trim();
+    if (trimmed && !profile.known_allergies.includes(trimmed)) {
       setProfile({
         ...profile,
-        known_allergies: [...profile.known_allergies, newAllergy.trim()]
+        known_allergies: [...profile.known_allergies, trimmed]
       });
       setNewAllergy('');
     }
@@ -82,7 +96,7 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-12 animate-slide-up pb-32">
+    <div className="max-w-5xl mx-auto space-y-12 animate-slide-up pb-32">
       <SectionHero 
         title="Bio-Profile" 
         subtitle="Physiological Baseline" 
@@ -90,9 +104,9 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
         color="#10b981" 
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Basic Biometrics */}
-        <div className="bg-slate-50 dark:bg-slate-900/50 p-10 rounded-[3.5rem] border border-slate-200 dark:border-white/5 space-y-8 shadow-xl">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left Column: Basic Biometrics */}
+        <div className="lg:col-span-5 bg-slate-50 dark:bg-slate-900/50 p-10 rounded-[3.5rem] border border-slate-200 dark:border-white/5 space-y-8 shadow-xl h-fit">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-clinical-500/10 rounded-2xl flex items-center justify-center text-2xl">🧬</div>
@@ -176,35 +190,65 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
           </div>
         </div>
 
-        {/* Medical History */}
-        <div className="bg-slate-50 dark:bg-slate-900/50 p-10 rounded-[3.5rem] border border-slate-200 dark:border-white/5 space-y-8 shadow-xl">
+        {/* Right Column: Medical History */}
+        <div className="lg:col-span-7 bg-slate-50 dark:bg-slate-900/50 p-10 rounded-[3.5rem] border border-slate-200 dark:border-white/5 space-y-12 shadow-xl">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-clinical-500/10 rounded-2xl flex items-center justify-center text-2xl">📋</div>
             <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">Medical History</h3>
           </div>
           
-          <div className="space-y-8">
-            <div className="space-y-4">
-              <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest ml-4">Pre-existing Conditions</label>
+          <div className="space-y-12">
+            {/* PRE-EXISTING CONDITIONS SECTION */}
+            <div className="space-y-6">
+              <div className="flex justify-between items-end px-4">
+                <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Pre-existing Conditions</label>
+                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Manual or Quick Select</span>
+              </div>
+              
               <div className="flex gap-3">
                 <input 
                   type="text" 
                   value={newCondition}
                   onChange={e => setNewCondition(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && addCondition()}
-                  placeholder="e.g. Hypertension, Diabetes..."
+                  onKeyDown={e => e.key === 'Enter' && addCondition(newCondition)}
+                  placeholder="Type rare condition..."
                   className="flex-1 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl px-6 py-4 font-bold text-sm outline-none focus:border-clinical-500 transition-all dark:text-white shadow-inner"
                 />
                 <button 
-                  onClick={addCondition} 
+                  onClick={() => addCondition(newCondition)} 
                   className="w-14 h-14 bg-clinical-600 text-white rounded-2xl font-black text-2xl shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center"
                 >
                   +
                 </button>
               </div>
-              <div className="flex flex-wrap gap-2 pt-2">
+
+              {/* Quick Select Conditions */}
+              <div className="space-y-3">
+                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-4">Common Bases:</p>
+                <div className="flex flex-wrap gap-2">
+                  {COMMON_CONDITIONS.map(c => {
+                    const isSelected = profile.preexisting_conditions.includes(c);
+                    return (
+                      <button
+                        key={c}
+                        onClick={() => isSelected ? removeCondition(profile.preexisting_conditions.indexOf(c)) : addCondition(c)}
+                        className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${
+                          isSelected 
+                            ? 'bg-clinical-600 border-clinical-600 text-white shadow-lg' 
+                            : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 hover:border-clinical-400'
+                        }`}
+                      >
+                        {c}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Active Conditions Display */}
+              <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100 dark:border-white/5 mt-4">
                 {profile.preexisting_conditions.map((c, i) => (
-                  <span key={i} className="px-4 py-2 bg-clinical-500/10 text-clinical-600 dark:bg-clinical-500/20 dark:text-clinical-400 rounded-full text-[10px] font-black uppercase flex items-center gap-2 border border-clinical-500/10">
+                  <span key={i} className="px-4 py-2 bg-clinical-500/10 text-clinical-600 dark:bg-clinical-500/20 dark:text-clinical-400 rounded-full text-[10px] font-black uppercase flex items-center gap-2 border border-clinical-500/10 animate-in zoom-in-95">
                     {c}
                     <button onClick={() => removeCondition(i)} className="w-5 h-5 rounded-full hover:bg-clinical-500 hover:text-white flex items-center justify-center transition-colors">×</button>
                   </span>
@@ -212,27 +256,57 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
               </div>
             </div>
 
-            <div className="space-y-4">
-              <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest ml-4">Known Allergies</label>
+            {/* KNOWN ALLERGIES SECTION */}
+            <div className="space-y-6">
+              <div className="flex justify-between items-end px-4">
+                <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Known Allergies</label>
+                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Critical Safety Data</span>
+              </div>
+
               <div className="flex gap-3">
                 <input 
                   type="text" 
                   value={newAllergy}
                   onChange={e => setNewAllergy(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && addAllergy()}
-                  placeholder="e.g. Penicillin, Peanuts..."
+                  onKeyDown={e => e.key === 'Enter' && addAllergy(newAllergy)}
+                  placeholder="Type rare allergy..."
                   className="flex-1 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl px-6 py-4 font-bold text-sm outline-none focus:border-clinical-500 transition-all dark:text-white shadow-inner"
                 />
                 <button 
-                  onClick={addAllergy} 
+                  onClick={() => addAllergy(newAllergy)} 
                   className="w-14 h-14 bg-rose-500 text-white rounded-2xl font-black text-2xl shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center"
                 >
                   +
                 </button>
               </div>
-              <div className="flex flex-wrap gap-2 pt-2">
+
+              {/* Quick Select Allergies */}
+              <div className="space-y-3">
+                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-4">Common Triggers:</p>
+                <div className="flex flex-wrap gap-2">
+                  {COMMON_ALLERGIES.map(a => {
+                    const isSelected = profile.known_allergies.includes(a);
+                    return (
+                      <button
+                        key={a}
+                        onClick={() => isSelected ? removeAllergy(profile.known_allergies.indexOf(a)) : addAllergy(a)}
+                        className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${
+                          isSelected 
+                            ? 'bg-rose-600 border-rose-600 text-white shadow-lg' 
+                            : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 hover:border-rose-400'
+                        }`}
+                      >
+                        {a}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Active Allergies Display */}
+              <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100 dark:border-white/5 mt-4">
                 {profile.known_allergies.map((a, i) => (
-                  <span key={i} className="px-4 py-2 bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 rounded-full text-[10px] font-black uppercase flex items-center gap-2 border border-rose-500/10">
+                  <span key={i} className="px-4 py-2 bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 rounded-full text-[10px] font-black uppercase flex items-center gap-2 border border-rose-500/10 animate-in zoom-in-95">
                     {a}
                     <button onClick={() => removeAllergy(i)} className="w-5 h-5 rounded-full hover:bg-rose-500 hover:text-white flex items-center justify-center transition-colors">×</button>
                   </span>

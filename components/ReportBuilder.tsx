@@ -41,7 +41,7 @@ const ReportBuilder: React.FC<Props> = ({ medications, medicationEvents, checkin
     if (loading) {
       interval = setInterval(() => {
         setLoadingStep(prev => (prev < steps.length - 1 ? prev + 1 : prev));
-      }, 1200);
+      }, 1500);
     }
     return () => interval && clearInterval(interval);
   }, [loading]);
@@ -330,15 +330,60 @@ const ReportBuilder: React.FC<Props> = ({ medications, medicationEvents, checkin
       </div>
 
       {loading && (
-        <div className="fixed inset-0 z-[100] bg-white/90 dark:bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-12 space-y-12 animate-in fade-in duration-300">
-           <div className="relative">
-              <div className="w-32 h-32 border-[12px] border-slate-100 dark:border-white/5 rounded-full"></div>
-              <div className="absolute inset-0 w-32 h-32 border-[12px] border-clinical-600 border-t-transparent rounded-full animate-spin"></div>
+        <div className="fixed inset-0 z-[100] bg-[#020617] backdrop-blur-2xl flex flex-col items-center justify-center p-12 space-y-16 animate-in fade-in duration-500 overflow-hidden">
+           {/* High-tech Assembling Animation */}
+           <div className="relative w-80 h-80 flex items-center justify-center">
+              {/* Spinning Schematics */}
+              <div className="absolute inset-0 border-[1px] border-clinical-500/20 rounded-full animate-[spin_10s_linear_infinite]"></div>
+              <div className="absolute inset-4 border-[1px] border-clinical-400/10 rounded-full animate-[spin_6s_linear_infinite_reverse]"></div>
+              
+              {/* Data Nodes Assembling */}
+              <div className="absolute w-24 h-24 bg-clinical-600/10 rounded-3xl animate-pulse"></div>
+              
+              {/* Floating Data Blocks */}
+              {[...Array(8)].map((_, i) => (
+                <div 
+                  key={i}
+                  className="absolute w-4 h-4 bg-clinical-500 rounded-lg opacity-40 animate-float"
+                  style={{
+                    top: `${50 + 40 * Math.sin(i * Math.PI / 4)}%`,
+                    left: `${50 + 40 * Math.cos(i * Math.PI / 4)}%`,
+                    animationDelay: `${i * 0.2}s`,
+                    animationDuration: '3s'
+                  }}
+                ></div>
+              ))}
+
+              {/* Core Processing Node */}
+              <div className="relative z-10 w-32 h-32 bg-slate-900 border-2 border-clinical-500 rounded-[2.5rem] shadow-[0_0_50px_rgba(59,130,246,0.5)] flex items-center justify-center">
+                <div className="text-4xl animate-pulse">🧬</div>
+                {/* Orbital Scanning Line */}
+                <div className="absolute inset-0 border-2 border-emerald-500/40 rounded-[2.5rem] animate-[ping_2s_linear_infinite]"></div>
+              </div>
            </div>
-           <div className="text-center space-y-4">
-              <h3 className="text-4xl font-black uppercase tracking-tighter italic text-slate-900 dark:text-white">Dr. BioMath is synthesizing...</h3>
-              <p className="text-[11px] font-black uppercase tracking-[0.4em] text-clinical-500 animate-pulse">{steps[loadingStep]}</p>
+
+           <div className="text-center space-y-6 relative z-10">
+              <div className="flex flex-col items-center space-y-2">
+                <h3 className="text-4xl md:text-5xl font-black uppercase tracking-tighter italic text-white leading-none">
+                  Assembling Clinical Report
+                </h3>
+                <div className="h-1 w-24 bg-clinical-600 rounded-full animate-pulse"></div>
+              </div>
+              
+              <div className="space-y-1">
+                <p className="text-[11px] font-black uppercase tracking-[0.5em] text-clinical-400 animate-pulse transition-all duration-700">
+                  {steps[loadingStep]}
+                </p>
+                <div className="flex justify-center gap-1">
+                  {steps.map((_, i) => (
+                    <div key={i} className={`h-1 rounded-full transition-all duration-500 ${loadingStep >= i ? 'w-4 bg-clinical-500 shadow-[0_0_8px_#3b82f6]' : 'w-2 bg-white/10'}`}></div>
+                  ))}
+                </div>
+              </div>
            </div>
+
+           {/* Scanning Ambient Light */}
+           <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-clinical-600/10 to-transparent pointer-events-none"></div>
         </div>
       )}
     </div>
