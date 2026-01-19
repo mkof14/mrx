@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import SectionHero from './SectionHero';
 import { GoogleGenAI } from '@google/genai';
@@ -57,7 +56,6 @@ const SystemDiagnostics: React.FC = () => {
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: 'Perform a system heartbeat check. Return "HEALTH_OK" and current timestamp.',
-        config: { thinkingConfig: { thinkingBudget: 0 } }
       });
       
       const text = response.text || "";
@@ -146,7 +144,7 @@ const SystemDiagnostics: React.FC = () => {
             <div className="flex-1 bg-black rounded-3xl p-8 font-mono text-[10px] text-emerald-500 overflow-y-auto custom-scrollbar border border-white/10 shadow-inner">
                {testLog.map((log, i) => (
                  <div key={i} className="mb-1 animate-in slide-in-from-left-2 duration-300">
-                   <span className="opacity-40 mr-2">>>></span> {log}
+                   <span className="opacity-40 mr-2">{">>>"}</span> {log}
                  </div>
                ))}
                {isTesting && <div className="animate-pulse">_</div>}

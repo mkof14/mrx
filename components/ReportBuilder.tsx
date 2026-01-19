@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Medication, SymptomEntry, MedicationEvent, RiskColor, UserProfile } from '../types';
 import { analyzeMedicationData } from '../geminiService';
@@ -30,11 +29,11 @@ const ReportBuilder: React.FC<Props> = ({ medications, medicationEvents, checkin
   const [includeInteractions, setIncludeInteractions] = useState(true);
 
   const steps = [
-    "Синтез биометрических данных...",
-    "Картирование кинетики препаратов...",
-    "Анализ временных корреляций...",
-    "Калибровка порогов безопасности...",
-    "Финализация структуры клинического отчета..."
+    "Synthesizing biometric data...",
+    "Mapping medication kinetics...",
+    "Analyzing temporal correlations...",
+    "Calibrating safety thresholds...",
+    "Finalizing clinical report structure..."
   ];
 
   useEffect(() => {
@@ -85,19 +84,19 @@ const ReportBuilder: React.FC<Props> = ({ medications, medicationEvents, checkin
           <div className="lg:col-span-4 no-print space-y-6">
             <div className="bg-white dark:bg-slate-900/50 p-10 rounded-[3.5rem] border border-slate-200 dark:border-white/5 shadow-2xl space-y-8 sticky top-32">
               <div className="space-y-2">
-                <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">Конфигурация Отчета</h3>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">Выберите модули для включения в финальный документ.</p>
+                <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">Report Configuration</h3>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">Select modules to include in the final document.</p>
               </div>
 
               <div className="space-y-2">
                 {[
-                  { label: 'Биометрия пациента', state: includeBio, setter: setIncludeBio, icon: '🧬' },
-                  { label: 'Список препаратов', state: includeInventory, setter: setIncludeInventory, icon: '💊' },
-                  { label: 'Клиническое резюме', state: includeSummary, setter: setIncludeSummary, icon: '📄' },
-                  { label: 'Предупреждения', state: includeSafety, setter: setIncludeSafety, icon: '🚨' },
-                  { label: 'Матрица взаимодействий', state: includeInteractions, setter: setIncludeInteractions, icon: '🧩' },
-                  { label: 'История событий', state: includeAudit, setter: setIncludeAudit, icon: '📜' },
-                  { label: 'Графики состояния', state: includeTimeline, setter: setIncludeTimeline, icon: '📈' },
+                  { label: 'Patient Biometrics', state: includeBio, setter: setIncludeBio, icon: '🧬' },
+                  { label: 'Medication Inventory', state: includeInventory, setter: setIncludeInventory, icon: '💊' },
+                  { label: 'Clinical Summary', state: includeSummary, setter: setIncludeSummary, icon: '📄' },
+                  { label: 'Safety Warnings', state: includeSafety, setter: setIncludeSafety, icon: '🚨' },
+                  { label: 'Interaction Matrix', state: includeInteractions, setter: setIncludeInteractions, icon: '🧩' },
+                  { label: 'Event Audit Trail', state: includeAudit, setter: setIncludeAudit, icon: '📜' },
+                  { label: 'Symptom Timelines', state: includeTimeline, setter: setIncludeTimeline, icon: '📈' },
                 ].map(mod => (
                   <button 
                     key={mod.label}
@@ -124,10 +123,10 @@ const ReportBuilder: React.FC<Props> = ({ medications, medicationEvents, checkin
                     onClick={handleCopySummary} 
                     className={`w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 transition-all ${copyFeedback ? 'bg-emerald-500 text-white' : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200'}`}
                 >
-                  {copyFeedback ? 'Текст скопирован!' : '📋 Копировать Summary'}
+                  {copyFeedback ? 'Text Copied!' : '📋 Copy Summary Text'}
                 </button>
                 <button onClick={() => window.print()} className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-950 py-6 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 hover:scale-[1.02] transition-transform">
-                  <span>🖨️</span> Сохранить в PDF
+                  <span>🖨️</span> Save as PDF
                 </button>
               </div>
             </div>
@@ -346,7 +345,7 @@ const ReportBuilder: React.FC<Props> = ({ medications, medicationEvents, checkin
           <div className="space-y-4 relative z-10">
             <h3 className="text-4xl font-black tracking-tighter uppercase italic">Synthesize Report</h3>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest max-w-sm mx-auto leading-relaxed">
-              Движок MRX проанализирует вашу историю для создания структурированного клинического резюме. Вы сможете настроить состав отчета перед печатью.
+              The MRX engine will analyze your history to create a structured clinical summary. You can customize the report modules before printing.
             </p>
           </div>
           <button 
@@ -354,7 +353,7 @@ const ReportBuilder: React.FC<Props> = ({ medications, medicationEvents, checkin
             disabled={checkins.length === 0} 
             className="w-full relative z-10 bg-slate-900 dark:bg-white text-white dark:text-slate-950 py-12 rounded-[3.5rem] font-black text-sm uppercase tracking-[0.6em] shadow-3xl hover:scale-[1.01] transition-all disabled:opacity-20"
           >
-            Инициализировать Синтез
+            Initialize Synthesis ➔
           </button>
         </div>
       </div>
@@ -366,7 +365,7 @@ const ReportBuilder: React.FC<Props> = ({ medications, medicationEvents, checkin
               <div className="absolute inset-0 w-32 h-32 border-[12px] border-clinical-600 border-t-transparent rounded-full animate-spin"></div>
            </div>
            <div className="text-center space-y-4">
-              <h3 className="text-4xl font-black uppercase tracking-tighter italic">Dr. BioMath синтезирует данные...</h3>
+              <h3 className="text-4xl font-black uppercase tracking-tighter italic">Dr. BioMath is synthesizing your data...</h3>
               <p className="text-[11px] font-black uppercase tracking-[0.4em] text-clinical-500 animate-pulse">{steps[loadingStep]}</p>
            </div>
         </div>

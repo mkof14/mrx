@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { UserProfile } from '../types';
 import SectionHero from './SectionHero';
@@ -123,7 +122,7 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
                 type="text" 
                 value={profile.name || ''} 
                 onChange={e => setProfile({...profile, name: e.target.value})}
-                placeholder="Как доктор должен к вам обращаться?"
+                placeholder="How should Dr. BioMath address you?"
                 className="w-full bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-2xl p-4 font-bold text-sm outline-none focus:border-clinical-500 transition-all dark:text-white"
               />
             </div>
@@ -235,9 +234,9 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
       </div>
 
       <div className="p-12 bg-clinical-600 text-white rounded-[4rem] text-center space-y-6">
-        <h3 className="text-2xl font-black uppercase tracking-tighter">Критическая Связь Профиля</h3>
+        <h3 className="text-2xl font-black uppercase tracking-tighter">Critical Profile Link</h3>
         <p className="text-sm font-bold opacity-80 leading-relaxed italic max-w-2xl mx-auto">
-          Эти данные являются основой для алгоритмов безопасности MRX. Без точного указания аллергий и условий отчеты будут носить общий характер. Заполнение профиля гарантирует, что каждый PDF-отчет будет валиден для клинического использования вашим врачом.
+          These data are the foundation for the MRX safety algorithms. Without accurate indication of allergies and conditions, reports will be generic. Completing your profile ensures that every generated PDF report is valid for clinical use by your physician.
         </p>
         <div className="flex justify-center gap-2">
            <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>
