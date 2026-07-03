@@ -25,6 +25,11 @@ Copy from your local `.env.local` (same OAuth client from [Google Cloud Console]
 | `GOOGLE_CLIENT_ID` | Server — verifies login |
 | `VITE_GOOGLE_CLIENT_ID` | Build — same value; required for the button if API is slow |
 
+**Quick sync from `.env.local` (run once locally):**
+```bash
+./scripts/sync-vercel-env.sh
+```
+
 In Google Cloud → OAuth client → **Authorized JavaScript origins**, add:
 - `https://mrx-lemon.vercel.app` (your production URL)
 
