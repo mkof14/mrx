@@ -10,6 +10,9 @@ interface FooterProps {
   onLanguageChange?: (code: string) => void;
   theme?: 'light' | 'dark';
   toggleTheme?: () => void;
+  isAuthenticated?: boolean;
+  onSignIn?: () => void;
+  onSignOut?: () => void;
 }
 
 const Footer: React.FC<FooterProps> = ({
@@ -17,7 +20,10 @@ const Footer: React.FC<FooterProps> = ({
   onOpenFAQ,
   onLanguageChange,
   theme,
-  toggleTheme
+  toggleTheme,
+  isAuthenticated = false,
+  onSignIn,
+  onSignOut
 }) => {
   const { t } = useI18n();
   const currentYear = new Date().getFullYear();
@@ -41,6 +47,23 @@ const Footer: React.FC<FooterProps> = ({
               <button onClick={() => onOpenLegal?.('reports')} className="text-xs font-semibold text-left text-gray-600 dark:text-zinc-300 hover:text-clinical-600 transition-colors">{t('footer.doctor')}</button>
               <button onClick={() => onOpenLegal?.('safety')} className="text-xs font-semibold text-left text-gray-600 dark:text-zinc-300 hover:text-clinical-600 transition-colors">{t('footer.interactions')}</button>
               <button onClick={onOpenFAQ} className="text-xs font-semibold text-left text-gray-600 dark:text-zinc-300 hover:text-clinical-600 transition-colors">{t('footer.faq')}</button>
+              {isAuthenticated && onSignOut ? (
+                <button
+                  type="button"
+                  onClick={onSignOut}
+                  className="text-xs font-bold text-left text-rose-600 dark:text-rose-400 hover:text-rose-700 transition-colors mt-1"
+                >
+                  {t('nav.signOut')} →
+                </button>
+              ) : onSignIn ? (
+                <button
+                  type="button"
+                  onClick={onSignIn}
+                  className="text-xs font-bold text-left text-clinical-600 hover:text-clinical-700 transition-colors mt-1"
+                >
+                  {t('nav.signIn')} →
+                </button>
+              ) : null}
             </nav>
           </div>
 
@@ -59,9 +82,22 @@ const Footer: React.FC<FooterProps> = ({
         {/* Language + theme — above disclaimer so menu opens upward */}
         <div className="relative z-[400] flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-5 mrx-card dark:bg-mrx-panel-dark rounded-2xl">
           <p className="text-xs text-gray-500 dark:text-zinc-500">{t('common.language')} · {t('common.theme')}</p>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-2">
             {toggleTheme && theme && <ThemeToggle theme={theme} onToggle={toggleTheme} />}
             <LanguageSelector align="right" dropup onChange={(code) => onLanguageChange?.(code)} />
+            {isAuthenticated && onSignOut ? (
+              <button
+                type="button"
+                onClick={onSignOut}
+                className="px-4 py-2 rounded-xl text-xs font-bold border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-colors"
+              >
+                {t('nav.signOut')}
+              </button>
+            ) : onSignIn ? (
+              <button type="button" onClick={onSignIn} className="mrx-btn-rainbow px-4 py-2 text-xs">
+                {t('nav.signIn')}
+              </button>
+            ) : null}
           </div>
         </div>
 

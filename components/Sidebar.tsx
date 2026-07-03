@@ -13,6 +13,7 @@ interface SidebarProps {
   onLanguageChange?: (code: string) => void;
   theme?: 'light' | 'dark';
   toggleTheme?: () => void;
+  onLogout?: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -22,7 +23,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   setIsCollapsed,
   onLanguageChange,
   theme,
-  toggleTheme
+  toggleTheme,
+  onLogout
 }) => {
   const { t } = useI18n();
 
@@ -86,6 +88,22 @@ const Sidebar: React.FC<SidebarProps> = ({
           );
         })}
       </nav>
+
+      {onLogout && (
+        <div className={`p-3 border-t border-mrx-line dark:border-mrx-line-dark ${isCollapsed ? 'flex justify-center' : ''}`}>
+          <button
+            type="button"
+            onClick={onLogout}
+            title={t('nav.signOut')}
+            className={`w-full flex items-center rounded-xl py-3 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all font-semibold text-sm ${
+              isCollapsed ? 'justify-center px-0' : 'px-3 gap-3'
+            }`}
+          >
+            <span className="text-lg leading-none">🚪</span>
+            {!isCollapsed && <span>{t('nav.signOut')}</span>}
+          </button>
+        </div>
+      )}
     </aside>
   );
 };

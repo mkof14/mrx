@@ -7,6 +7,8 @@ import MrxLogo from './MrxLogo';
 import LanguageSelector from './LanguageSelector';
 import ThemeToggle from './ThemeToggle';
 import PasswordField from './PasswordField';
+import MedTicker from './MedTicker';
+import LiveScanDemo from './LiveScanDemo';
 import { useI18n } from '../i18n/I18nContext';
 import { isLocale } from '../i18n/languages';
 import { api } from '../services/apiClient';
@@ -33,21 +35,15 @@ const Auth: React.FC<AuthProps> = ({
   const [isRegistering, setIsRegistering] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [activeScanName, setActiveScanName] = useState('Sertraline');
   const [showLegalModal, setShowLegalModal] = useState(false);
   const [showFAQModal, setShowFAQModal] = useState(false);
   const [initialLegalSection, setInitialLegalSection] = useState('privacy');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [scanColorIdx, setScanColorIdx] = useState(0);
   const [googleConfigured, setGoogleConfigured] = useState(false);
+  const [funFactIdx, setFunFactIdx] = useState(0);
   const googleBtnRef = useRef<HTMLDivElement>(null);
 
-  const scanColors = [
-    'rgba(37, 99, 235, 0.85)',
-    'rgba(16, 185, 129, 0.85)',
-    'rgba(139, 92, 246, 0.85)',
-    'rgba(245, 158, 11, 0.85)'
-  ];
+  const funFacts = ['auth.funFact1', 'auth.funFact2', 'auth.funFact3', 'auth.funFact4'] as const;
 
   const handleLocaleChange = (code: string) => {
     if (isLocale(code)) setLocale(code);
@@ -55,19 +51,13 @@ const Auth: React.FC<AuthProps> = ({
   };
 
   useEffect(() => {
-    const names = ['Sertraline', 'Amoxicillin', 'Metformin', 'Escitalopram', 'Ibuprofen', 'Lisinopril', 'Xanax'];
-    let idx = 0;
-    const interval = setInterval(() => {
-      setActiveScanName(names[idx]);
-      setScanColorIdx((prev) => (prev + 1) % scanColors.length);
-      idx = (idx + 1) % names.length;
-    }, 1800);
-    return () => clearInterval(interval);
-  }, [scanColors.length]);
-
-  useEffect(() => {
     api.auth.googleStatus().then((r) => setGoogleConfigured(r.configured)).catch(() => setGoogleConfigured(false));
   }, []);
+
+  useEffect(() => {
+    const id = setInterval(() => setFunFactIdx((i) => (i + 1) % funFacts.length), 5000);
+    return () => clearInterval(id);
+  }, [funFacts.length]);
 
   const handleGoogleCredential = useCallback(
     async (credential: string) => {
@@ -143,29 +133,77 @@ const Auth: React.FC<AuthProps> = ({
     setShowLegalModal(true);
   };
 
+  const openSignIn = (register = false) => {
+    setIsRegistering(register);
+    setShowLoginForm(true);
+  };
+
+  const floatingIcons = ['💊', '🧬', '📈', '🛡️', '🎙️', '🧩'];
+
   return (
     <div className="min-h-screen bg-mrx-canvas dark:bg-mrx-canvas-dark flex flex-col transition-colors duration-300 relative overflow-x-hidden font-sans">
-      <div className="absolute top-[-10%] left-[-10%] w-[45%] h-[45%] bg-clinical-500/10 blur-[120px] rounded-full animate-pulse-soft pointer-events-none" />
-      <div className="absolute bottom-[15%] right-[-10%] w-[40%] h-[40%] bg-emerald-500/10 blur-[100px] rounded-full animate-float pointer-events-none" />
-      <div className="absolute top-[40%] left-[30%] w-[25%] h-[25%] bg-violet-500/5 blur-[80px] rounded-full pointer-events-none" />
+      {/* Animated public background */}
+      <div className="absolute inset-0 mrx-public-grid animate-grid-scroll pointer-events-none opacity-60" />
+      <div className="absolute top-[-15%] left-[-5%] w-[55%] h-[55%] bg-clinical-500/15 blur-[130px] rounded-full animate-aurora pointer-events-none" />
+      <div className="absolute bottom-[5%] right-[-8%] w-[45%] h-[45%] bg-emerald-500/12 blur-[110px] rounded-full animate-aurora [animation-delay:4s] pointer-events-none" />
+      <div className="absolute top-[35%] right-[20%] w-[30%] h-[30%] bg-violet-500/10 blur-[90px] rounded-full animate-glow-pulse pointer-events-none" />
+      {floatingIcons.map((icon, i) => (
+        <span
+          key={icon}
+          className="absolute text-2xl sm:text-3xl opacity-[0.12] dark:opacity-[0.18] pointer-events-none animate-drift select-none"
+          style={{
+            top: `${8 + (i * 14) % 72}%`,
+            left: `${4 + (i * 17) % 88}%`,
+            animationDelay: `${i * 0.65}s`,
+            animationDuration: `${4.5 + (i % 3)}s`
+          }}
+          aria-hidden
+        >
+          {icon}
+        </span>
+      ))}
 
-      <nav className="sticky top-0 z-50 w-full border-b border-mrx-line dark:border-mrx-line-dark bg-mrx-canvas/85 dark:bg-mrx-sidebar-dark/85 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto p-5 flex justify-between items-center gap-4">
+      {!showLoginForm && <MedTicker />}
+
+      <nav className="sticky top-0 z-50 w-full border-b border-mrx-line dark:border-mrx-line-dark bg-mrx-canvas/85 dark:bg-mrx-sidebar-dark/85 backdrop-blur-md animate-fade-up">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center gap-3">
           <MrxLogo size="md" className="cursor-pointer" />
+          <div className="hidden md:flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => openLegal('features')}
+              className="px-3 py-2 text-xs font-semibold text-gray-600 dark:text-zinc-400 hover:text-clinical-600 rounded-lg hover:bg-white/60 dark:hover:bg-white/5 transition-colors"
+            >
+              {t('footer.features')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowFAQModal(true)}
+              className="px-3 py-2 text-xs font-semibold text-gray-600 dark:text-zinc-400 hover:text-clinical-600 rounded-lg hover:bg-white/60 dark:hover:bg-white/5 transition-colors"
+            >
+              {t('footer.faq')}
+            </button>
+          </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <ThemeToggle theme={theme} onToggle={toggleTheme} />
             <LanguageSelector align="right" onChange={handleLocaleChange} />
             {!showLoginForm ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setIsRegistering(false);
-                  setShowLoginForm(true);
-                }}
-                className="mrx-btn-primary px-5 sm:px-8 py-2.5 sm:py-3 text-xs sm:text-sm"
-              >
-                {t('auth.logIn')}
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => openSignIn(false)}
+                  className="hidden sm:inline-flex px-4 py-2.5 rounded-xl text-xs font-bold border border-mrx-line dark:border-mrx-line-dark text-gray-700 dark:text-zinc-200 hover:border-clinical-500 hover:text-clinical-600 transition-colors"
+                >
+                  {t('nav.signIn')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openSignIn(true)}
+                  className="mrx-btn-rainbow px-4 sm:px-6 py-2.5 text-xs sm:text-sm"
+                >
+                  {t('auth.signUp')}
+                </button>
+              </>
             ) : (
               <button
                 type="button"
@@ -196,61 +234,65 @@ const Auth: React.FC<AuthProps> = ({
                 <p className="text-gray-600 dark:text-zinc-400 text-lg md:text-xl max-w-xl mx-auto lg:mx-0 leading-relaxed">
                   {t('auth.heroSubtitle')}
                 </p>
+
+                <div className="flex flex-wrap justify-center lg:justify-start gap-2">
+                  {[
+                    { icon: '🧬', label: t('auth.statRx') },
+                    { icon: '🌍', label: t('auth.statLang') },
+                    { icon: '🎙️', label: t('auth.statVoice') }
+                  ].map(({ icon, label }) => (
+                    <span
+                      key={label}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/80 dark:bg-mrx-panel-dark/80 border border-mrx-line dark:border-mrx-line-dark text-[11px] font-bold text-slate-600 dark:text-slate-300 shadow-mrx-sm"
+                    >
+                      {icon} {label}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="mrx-card dark:bg-mrx-panel-dark rounded-2xl p-4 border border-clinical-200/50 dark:border-clinical-900/50 bg-clinical-50/50 dark:bg-clinical-950/20 max-w-xl mx-auto lg:mx-0">
+                  <p className="text-[10px] font-black text-clinical-600 uppercase tracking-widest mb-2">
+                    💡 {t('auth.didYouKnow')}
+                  </p>
+                  <p key={funFactIdx} className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed animate-fact-in">
+                    {t(funFacts[funFactIdx])}
+                  </p>
+                </div>
+
                 <button
                   type="button"
-                  onClick={() => {
-                    setIsRegistering(true);
-                    setShowLoginForm(true);
-                  }}
-                  className="mrx-btn-primary px-10 py-4 text-base shadow-mrx-lg hover:scale-[1.02] active:scale-[0.98] transition-transform"
+                  onClick={() => openSignIn(true)}
+                  className="mrx-btn-rainbow px-7 py-3 text-sm"
                 >
                   {t('auth.startTracking')} →
                 </button>
               </div>
 
-              <div className="relative rounded-2xl p-6 md:p-8 border border-white/10 bg-gradient-to-br from-slate-900 via-slate-800 to-clinical-950 shadow-mrx-lg overflow-hidden min-h-[340px] animate-in zoom-in-95 duration-700 delay-150">
-                <div
-                  className="absolute inset-x-0 h-[2px] top-0 animate-scanner z-20"
-                  style={{ backgroundColor: scanColors[scanColorIdx], boxShadow: `0 0 24px ${scanColors[scanColorIdx]}` }}
-                />
-                <div className="absolute inset-0 opacity-20 pointer-events-none">
-                  <div className="absolute top-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-clinical-400 to-transparent animate-running-track" />
-                  <div className="absolute top-2/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-emerald-400 to-transparent animate-running-track [animation-delay:0.6s]" />
-                </div>
-
-                <div className="space-y-6 relative z-10">
-                  <div className="flex items-center gap-4 bg-white/5 p-5 rounded-2xl border border-white/10 backdrop-blur-sm">
-                    <div className="w-12 h-12 bg-clinical-600/30 rounded-xl flex items-center justify-center text-2xl">💊</div>
-                    <div className="flex-1 space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-bold text-clinical-400 uppercase tracking-widest">
-                          {t('auth.scanBio')}: {activeScanName}
-                        </span>
-                        <span className="text-[9px] font-bold text-emerald-400 uppercase">{t('auth.scanLive')}</span>
-                      </div>
-                      <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                        <div className="h-full w-2/3 bg-clinical-500 rounded-full animate-shimmer" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
-                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{t('auth.molecularId')}</span>
-                    <p className="text-lg font-bold text-white mt-1">{activeScanName}</p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-center">
-                      <span className="text-[9px] font-bold text-emerald-400 uppercase">{t('auth.stability')}</span>
-                      <p className="text-sm font-bold text-white mt-1">{t('auth.stabilityOptimal')}</p>
-                    </div>
-                    <div className="p-4 rounded-2xl bg-clinical-500/10 border border-clinical-500/25 text-center">
-                      <span className="text-[9px] font-bold text-clinical-400 uppercase">{t('nav.interactions')}</span>
-                      <p className="text-sm font-bold text-white mt-1">{t('auth.interactionsChecked')}</p>
-                    </div>
-                  </div>
-                </div>
+              <div className="animate-in zoom-in-95 duration-700 delay-150">
+                <LiveScanDemo />
               </div>
+            </div>
+
+            {/* Animated capability cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+              {[
+                { icon: '💊', titleKey: 'home.step1' as const, descKey: 'home.step1desc' as const, delay: '0ms' },
+                { icon: '📝', titleKey: 'home.step2' as const, descKey: 'home.step2desc' as const, delay: '80ms' },
+                { icon: '📋', titleKey: 'home.step3' as const, descKey: 'home.step3desc' as const, delay: '160ms' },
+                { icon: '🧩', titleKey: 'home.cap1' as const, descKey: 'home.cap1desc' as const, delay: '240ms' },
+                { icon: '🛡️', titleKey: 'home.cap4' as const, descKey: 'home.cap4desc' as const, delay: '320ms' },
+                { icon: '🎙️', titleKey: 'home.cap5' as const, descKey: 'home.cap5desc' as const, delay: '400ms' }
+              ].map(({ icon, titleKey, descKey, delay }) => (
+                <div
+                  key={titleKey}
+                  className="mrx-card dark:bg-mrx-panel-dark rounded-2xl p-5 border border-mrx-line dark:border-mrx-line-dark hover:scale-[1.03] hover:shadow-mrx-md hover:border-clinical-400/40 transition-all opacity-0 animate-fade-up group"
+                  style={{ animationDelay: delay }}
+                >
+                  <span className="text-3xl block mb-3 group-hover:animate-drift">{icon}</span>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">{t(titleKey)}</p>
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">{t(descKey)}</p>
+                </div>
+              ))}
             </div>
           </div>
         ) : (
@@ -310,7 +352,7 @@ const Auth: React.FC<AuthProps> = ({
                     autoComplete={isRegistering ? 'new-password' : 'current-password'}
                   />
                 </div>
-                <button type="submit" disabled={isSubmitting} className="w-full mrx-btn-primary py-4 disabled:opacity-50">
+                <button type="submit" disabled={isSubmitting} className="w-full mrx-btn-rainbow py-4 disabled:opacity-50">
                   {isSubmitting
                     ? t('auth.authenticating')
                     : isRegistering
@@ -341,6 +383,8 @@ const Auth: React.FC<AuthProps> = ({
         onLanguageChange={handleLocaleChange}
         theme={theme}
         toggleTheme={toggleTheme}
+        isAuthenticated={false}
+        onSignIn={() => openSignIn(false)}
       />
 
       {showLegalModal && (

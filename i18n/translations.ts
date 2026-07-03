@@ -33,6 +33,8 @@ const en: Record<TranslationKey, string> = {
   'nav.checkin.short': 'Symptoms',
   'nav.tools': 'Helpful Tools',
   'nav.tools.short': 'Tools',
+  'nav.signIn': 'Sign in',
+  'nav.signOut': 'Sign out',
   'page.home.title': 'My Medication Summary',
   'page.home.subtitle': 'Everything you take in one place — interactions, side effects, and how you feel.',
   'page.home.chip1': 'Your drug list',

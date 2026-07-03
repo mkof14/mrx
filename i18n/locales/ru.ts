@@ -452,6 +452,8 @@ export const ruLocale: Partial<Record<AppTranslationKey, string>> = {
   'timeline.chartTitle': 'Динамика симптомов',
   'nav.tools': 'Полезные инструменты',
   'nav.tools.short': 'Инструменты',
+  'nav.signIn': 'Войти',
+  'nav.signOut': 'Выйти',
   'page.tools.title': 'Полезные инструменты',
   'page.tools.subtitle': 'Напоминания, ссылки для врача и семьи, штрихкод — всё простым языком.',
   'page.tools.chip1': 'Напоминания',

@@ -543,6 +543,7 @@ const App: React.FC = () => {
         onLanguageChange={handleLanguageChange}
         theme={theme}
         toggleTheme={toggleTheme}
+        onLogout={handleLogout}
       />
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         <Header profile={profile} theme={theme} toggleTheme={toggleTheme} isSyncing={isSyncing} saveError={saveError} activeTab={activeTab} />
@@ -560,6 +561,8 @@ const App: React.FC = () => {
           onLanguageChange={handleLanguageChange}
           theme={theme}
           toggleTheme={toggleTheme}
+          isAuthenticated
+          onSignOut={handleLogout}
         />
       </div>
       <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
