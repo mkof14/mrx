@@ -21,7 +21,9 @@ add_var() {
     echo "skip $name (empty)"
     return
   fi
-  printf '%s' "$value" | npx vercel env add "$name" production preview development --yes --sensitive
+  for env in production preview development; do
+    printf '%s' "$value" | npx vercel env add "$name" "$env" --yes --sensitive --force 2>&1 | tail -1
+  done
   echo "ok $name"
 }
 
@@ -31,7 +33,9 @@ add_var GEMINI_API_KEY "${GEMINI_API_KEY:-}"
 add_var JWT_SECRET "${JWT_SECRET:-}"
 add_var ELEVENLABS_API_KEY "${ELEVENLABS_API_KEY:-}"
 add_var ELEVENLABS_MODEL_ID "${ELEVENLABS_MODEL_ID:-}"
-printf '%s' 'https://mrx-lemon.vercel.app' | npx vercel env add CLIENT_ORIGIN production preview development --yes
+for env in production preview development; do
+  printf '%s' 'https://mrx-lemon.vercel.app' | npx vercel env add CLIENT_ORIGIN "$env" --yes --force 2>&1 | tail -1
+done
 echo "ok CLIENT_ORIGIN"
 
 echo ""
