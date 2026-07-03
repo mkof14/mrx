@@ -1,5 +1,7 @@
 
 import React from 'react';
+import { NAV_STRUCTURE } from '../i18n/I18nContext';
+import { useI18n } from '../i18n/I18nContext';
 
 interface BottomNavProps {
   activeTab: string;
@@ -7,39 +9,28 @@ interface BottomNavProps {
 }
 
 const BottomNav: React.FC<BottomNavProps> = ({ activeTab, setActiveTab }) => {
-  const items = [
-    { id: 'home', label: 'HOME', icon: '🏠', color: '#5dade2' },
-    { id: 'profile', label: 'BIO', icon: '🧬', color: '#48c9b0' },
-    { id: 'assistant', label: 'CHAT', icon: '🧠', color: '#3b82f6' },
-    { id: 'live', label: 'LIVE', icon: '🎙️', color: '#60a5fa' },
-    { id: 'checkin', label: 'FEEL', icon: '📝', color: '#eb984e' },
-  ];
+  const { t } = useI18n();
+  const items = NAV_STRUCTURE.filter((item) => item.mobile && !('action' in item));
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-[#0a192f]/95 backdrop-blur-xl border-t border-slate-200 dark:border-white/5 flex justify-around items-center h-20 px-2 z-50">
-      {items.map(item => (
-        <button
-          key={item.id}
-          onClick={() => setActiveTab(item.id)}
-          className="flex flex-col items-center justify-center flex-1 h-full transition-all group relative"
-        >
-          <div 
-            className={`text-2xl transition-all duration-300 ${activeTab === item.id ? 'scale-110 mb-1' : 'opacity-40 grayscale'}`}
-            style={{ color: activeTab === item.id ? item.color : 'inherit' }}
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-mrx-panel/98 dark:bg-mrx-sidebar-dark/95 backdrop-blur-md border-t border-mrx-line dark:border-mrx-line-dark shadow-mrx-lg dark:shadow-none flex justify-around items-center h-[4.25rem] px-1 z-50">
+      {items.map((item) => {
+        const isActive = activeTab === item.id;
+        return (
+          <button
+            key={item.id}
+            onClick={() => setActiveTab(item.id)}
+            className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-colors rounded-xl mx-0.5 ${
+              isActive
+                ? 'text-clinical-600 dark:text-clinical-500 bg-clinical-50 dark:bg-transparent shadow-mrx-sm dark:shadow-none'
+                : 'text-gray-500 dark:text-zinc-500'
+            }`}
           >
-            {item.icon}
-          </div>
-          <span 
-            className={`text-[8px] font-black uppercase tracking-widest transition-all ${activeTab === item.id ? 'opacity-100' : 'opacity-30'}`}
-            style={{ color: activeTab === item.id ? item.color : 'inherit' }}
-          >
-            {item.label}
-          </span>
-          {activeTab === item.id && (
-            <div className="absolute bottom-0 w-8 h-1 rounded-t-full" style={{ backgroundColor: item.color }}></div>
-          )}
-        </button>
-      ))}
+            <span className="text-xl leading-none">{item.icon}</span>
+            <span className="text-[10px] font-semibold">{t(item.shortKey)}</span>
+          </button>
+        );
+      })}
     </nav>
   );
 };

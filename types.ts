@@ -27,6 +27,7 @@ export interface Medication {
     active_ingredients: string[];
     route: string | null;
     form: string | null;
+    rxcui?: string | null;
   };
   status: 'ACTIVE' | 'PAUSED' | 'STOPPED';
   current_dose: {
@@ -71,7 +72,31 @@ export interface SymptomEntry {
   notes: string | null;
 }
 
-export type AIVoice = 'Zephyr' | 'Puck' | 'Charon' | 'Kore' | 'Fenrir';
+export type AIVoice = 'Rachel' | 'Adam' | 'Bella' | 'Antoni' | 'Elli';
+
+/** Voices shown in UI when ElevenLabs is the TTS provider */
+export const ELEVENLABS_VOICE_OPTIONS: AIVoice[] = ['Rachel', 'Adam', 'Bella', 'Antoni', 'Elli'];
+
+/** Legacy Gemini voices — mapped to ElevenLabs on the server */
+export const LEGACY_GEMINI_VOICES = ['Zephyr', 'Puck', 'Charon', 'Kore', 'Fenrir'] as const;
+
+export type LegacyGeminiVoice = (typeof LEGACY_GEMINI_VOICES)[number];
+
+export function normalizePreferredVoice(voice?: string): AIVoice {
+  const map: Record<string, AIVoice> = {
+    Rachel: 'Rachel',
+    Adam: 'Adam',
+    Bella: 'Bella',
+    Antoni: 'Antoni',
+    Elli: 'Elli',
+    Zephyr: 'Rachel',
+    Puck: 'Antoni',
+    Charon: 'Adam',
+    Kore: 'Bella',
+    Fenrir: 'Elli'
+  };
+  return map[voice || ''] || 'Rachel';
+}
 
 export interface UserProfile {
   id: string;
@@ -84,11 +109,25 @@ export interface UserProfile {
   preferred_units: 'METRIC' | 'IMPERIAL';
   preferred_voice: AIVoice;
   speech_speed: number;
+  preferred_language?: 'en' | 'es' | 'de' | 'fr' | 'zh' | 'he' | 'ar' | 'uk' | 'ru';
   pregnancy_possible: boolean | null;
   preexisting_conditions: string[];
   known_allergies: string[];
+  allergies_confirmed_none?: boolean;
+  adverse_drug_reactions: string[];
+  current_supplements: string[];
+  smoking_status: 'NEVER' | 'FORMER' | 'CURRENT' | null;
+  alcohol_use: 'NONE' | 'OCCASIONAL' | 'REGULAR' | null;
+  kidney_function: 'NORMAL' | 'REDUCED' | 'DIALYSIS' | 'UNKNOWN' | null;
+  liver_function: 'NORMAL' | 'REDUCED' | 'UNKNOWN' | null;
+  is_pregnant: boolean | null;
+  is_breastfeeding: boolean | null;
+  on_blood_thinner: boolean | null;
+  pharmacogenomics_notes?: string;
   goals: string[];
   onboarded: boolean;
   is_subscribed: boolean;
   subscription_end_date?: string;
+  ai_audit_consent?: boolean;
+  emergency_region?: 'US' | 'EU' | 'RU' | 'UK' | 'IL' | 'CN' | 'DEFAULT' | null;
 }

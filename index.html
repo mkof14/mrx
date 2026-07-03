@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   
   <title>MRX.Health — Simple Medication Safety</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#6366f1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="MRX">
   
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -68,14 +73,35 @@
             }
           },
           colors: {
+            mrx: {
+              canvas: '#d4dce8',
+              'canvas-dark': '#0b0b0e',
+              panel: '#ffffff',
+              'panel-dark': '#121216',
+              inset: '#eef2f8',
+              'inset-dark': '#18181e',
+              line: '#b8c4d4',
+              'line-dark': '#2a2a32',
+              sidebar: '#e4eaf2',
+              'sidebar-dark': '#070709',
+              overlay: '#3f3f46',
+              'overlay-dark': '#030305',
+              accent: '#2563eb',
+            },
             clinical: {
-              50: '#f0f4ff',
-              100: '#e0e9fe',
+              50: '#eff6ff',
+              100: '#dbeafe',
               500: '#3b82f6',
               600: '#2563eb',
               900: '#1e3a8a',
-              950: '#0a1931',
+              950: '#2e3340',
             }
+          },
+          boxShadow: {
+            'mrx-sm': '0 1px 3px rgba(15, 23, 42, 0.07), 0 1px 2px rgba(37, 99, 235, 0.04)',
+            'mrx-md': '0 6px 20px rgba(15, 23, 42, 0.09), 0 2px 8px rgba(37, 99, 235, 0.07)',
+            'mrx-lg': '0 14px 36px rgba(15, 23, 42, 0.11), 0 4px 14px rgba(37, 99, 235, 0.08)',
+            'mrx-xl': '0 22px 50px rgba(15, 23, 42, 0.13), 0 8px 20px rgba(37, 99, 235, 0.1)',
           }
         }
       }
@@ -86,12 +112,103 @@
       font-family: 'Plus Jakarta Sans', sans-serif;
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
+      background-color: #d4dce8;
+      color: #1f2937;
+    }
+
+    .dark body,
+    html.dark body {
+      background-color: #0b0b0e;
+      color: #f4f4f5;
+    }
+
+    .mrx-card {
+      background: #ffffff;
+      border: 1px solid #b8c4d4;
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.09), 0 2px 8px rgba(37, 99, 235, 0.07);
+    }
+
+    .dark .mrx-card {
+      background: #121216;
+      border: 1px solid #2a2a32;
+      box-shadow: none;
+    }
+
+    .mrx-nav-active {
+      background: #ffffff !important;
+      border: 1px solid #b8c4d4;
+      border-left: 3px solid #2563eb !important;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.1), 0 1px 4px rgba(37, 99, 235, 0.08);
+      color: #1d4ed8 !important;
+    }
+
+    .dark .mrx-nav-active {
+      background: #18181e !important;
+      border: 1px solid #2a2a32;
+      border-left: 3px solid #3b82f6 !important;
+      box-shadow: none;
+      color: #f4f4f5 !important;
+    }
+
+    .mrx-btn-primary {
+      background: #2563eb;
+      color: #ffffff;
+      border: none;
+      border-radius: 1rem;
+      padding: 0.75rem 1.5rem;
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+    }
+
+    .mrx-btn-primary:hover {
+      background: #3b82f6;
+    }
+
+    .mrx-input {
+      width: 100%;
+      background: #eef2f8;
+      border: 1px solid #b8c4d4;
+      border-radius: 1rem;
+      padding: 0.75rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      outline: none;
+      color: #1f2937;
+    }
+
+    .dark .mrx-input {
+      background: #18181e;
+      border-color: #2a2a32;
+      color: #f4f4f5;
+    }
+
+    .mrx-input:focus {
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.35);
+    }
+
+    .mrx-label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #6b7280;
+      margin-bottom: 0.375rem;
+    }
+
+    .dark .mrx-label {
+      color: #a1a1aa;
     }
     
     .glass-morphism {
-      background: rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(16px);
+      border: 1px solid #d4d8de;
+    }
+
+    .dark .glass-morphism {
+      background: rgba(18, 18, 22, 0.85);
+      border: 1px solid #2a2a32;
     }
 
     ::-webkit-scrollbar {
@@ -99,30 +216,17 @@
     }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
+      background: #c5cad1;
       border-radius: 10px;
     }
-    .dark ::-webkit-scrollbar-thumb { background: #334155; }
+    .dark ::-webkit-scrollbar-thumb { background: #3a3a44; }
     
     .animate-entrance {
       animation: slide-up 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
   </style>
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.37.0",
-    "recharts": "https://esm.sh/recharts@^3.6.0",
-    "vite": "https://esm.sh/vite@^7.3.1",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
-  }
-}
-</script>
 </head>
-<body class="bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-blue-500 selection:text-white transition-colors duration-500">
+<body class="bg-mrx-canvas dark:bg-mrx-canvas-dark text-gray-900 dark:text-zinc-100 selection:bg-clinical-500 selection:text-white transition-colors duration-300">
   <div id="root"></div>
   <script type="module" src="./index.tsx"></script>
 </body>

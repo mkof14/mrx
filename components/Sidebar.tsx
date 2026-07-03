@@ -1,120 +1,91 @@
 import React from 'react';
+import { NAV_STRUCTURE } from '../i18n/I18nContext';
+import { useI18n } from '../i18n/I18nContext';
+import LanguageSelector from './LanguageSelector';
+import ThemeToggle from './ThemeToggle';
+import MrxLogo from './MrxLogo';
 
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   isCollapsed: boolean;
   setIsCollapsed: (collapsed: boolean) => void;
+  onLanguageChange?: (code: string) => void;
+  theme?: 'light' | 'dark';
+  toggleTheme?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed, setIsCollapsed }) => {
-  const items = [
-    { id: 'home', label: 'DASHBOARD', icon: '🏠', color: '#3b82f6' },
-    { id: 'profile', label: 'BIO-PROFILE', icon: '🧬', color: '#10b981' },
-    { id: 'assistant', label: 'NEURAL CHAT', icon: '🧠', color: '#6366f1' },
-    { id: 'live', label: 'LIVE CONSULT', icon: '🎙️', color: '#0ea5e9' },
-    { id: 'timeline', label: 'PROGRESS', icon: '📈', color: '#06b6d4' },
-    { id: 'meds', label: 'MY MEDS', icon: '💊', color: '#a855f7' },
-    { id: 'checkin', label: 'HOW I FEEL', icon: '📝', color: '#f59e0b' },
-    { id: 'reports', label: 'FOR DOCTOR', icon: '📋', color: '#f43f5e' },
-    { id: 'safety', label: 'EMERGENCY', icon: '🚨', color: '#ef4444' },
-    { id: 'diagnostics', label: 'SYSTEM HEALTH', icon: '📡', color: '#34d399' },
-    { id: 'settings', label: 'SETTINGS', icon: '⚙️', color: '#64748b' },
-    { id: 'legal', label: 'LEGAL', icon: '⚖️', color: '#94a3b8' },
-  ];
+const Sidebar: React.FC<SidebarProps> = ({
+  activeTab,
+  setActiveTab,
+  isCollapsed,
+  setIsCollapsed,
+  onLanguageChange,
+  theme,
+  toggleTheme
+}) => {
+  const { t } = useI18n();
 
   return (
-    <aside 
-      className={`hidden lg:flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 shrink-0 border-r border-slate-200 dark:border-white/5 transition-all duration-500 ease-in-out relative overflow-visible z-50 ${
-        isCollapsed ? 'w-20' : 'w-64'
+    <aside
+      className={`hidden lg:flex flex-col bg-mrx-sidebar dark:bg-mrx-sidebar-dark text-gray-600 dark:text-zinc-400 shrink-0 border-r border-mrx-line dark:border-mrx-line-dark shadow-mrx-sm dark:shadow-none transition-all duration-300 relative z-50 ${
+        isCollapsed ? 'w-[4.5rem]' : 'w-64'
       }`}
     >
-      {/* Branding Area */}
-      <div className={`p-8 mb-1 flex items-center ${isCollapsed ? 'justify-center' : 'gap-4'}`}>
-        <div className="relative group cursor-pointer" onClick={() => setIsCollapsed(!isCollapsed)}>
-          <div className="w-10 h-10 bg-clinical-600 rounded-xl flex items-center justify-center text-white text-xl font-black shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-transform group-hover:rotate-12">
-            ⬡
+      <div className={`p-4 flex flex-col gap-3 ${isCollapsed ? 'items-center' : ''}`}>
+        <div className={`flex items-center w-full ${isCollapsed ? 'justify-center' : 'justify-between gap-2'}`}>
+          <div className={`flex items-center min-w-0 ${isCollapsed ? '' : 'gap-3'}`}>
+            <button
+              type="button"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="w-10 h-10 bg-clinical-600 rounded-xl flex items-center justify-center text-white text-lg font-bold shrink-0 hover:bg-clinical-500 transition-colors shadow-mrx-sm"
+              aria-label="Toggle sidebar"
+            >
+              M
+            </button>
+            {!isCollapsed && <MrxLogo size="md" showIcon={false} className="flex-1" />}
           </div>
+          {!isCollapsed && (
+            <div className="flex items-center gap-1.5 shrink-0">
+              {toggleTheme && theme && <ThemeToggle theme={theme} onToggle={toggleTheme} />}
+              <LanguageSelector align="right" onChange={(code) => onLanguageChange?.(code)} />
+            </div>
+          )}
         </div>
-        {!isCollapsed && (
-          <div className="text-base font-black text-slate-900 dark:text-white tracking-[0.1em] uppercase animate-in fade-in slide-in-from-left-2 duration-500">
-            MRX<span className="text-clinical-500">.</span>HEALTH
+        {isCollapsed && (
+          <div className="flex flex-col items-center gap-2">
+            {toggleTheme && theme && <ThemeToggle theme={theme} onToggle={toggleTheme} />}
+            <LanguageSelector onChange={(code) => onLanguageChange?.(code)} />
           </div>
         )}
       </div>
 
-      {/* Navigation Items */}
-      <nav className="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar pt-2">
-        {items.map(item => {
+      <nav className="flex-1 px-3 space-y-1 overflow-y-auto custom-scrollbar pb-2">
+        {NAV_STRUCTURE.filter((item) => !('action' in item)).map((item) => {
           const isActive = activeTab === item.id;
+
           return (
             <button
               key={item.id}
               type="button"
               onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center rounded-2xl transition-all duration-300 group relative py-4 ${
-                isCollapsed ? 'justify-center px-0' : 'px-5 gap-4'
+              title={t(item.labelKey)}
+              className={`w-full flex items-center rounded-xl transition-all py-3 ${
+                isCollapsed ? 'justify-center px-0' : 'px-3 gap-3'
               } ${
-                isActive 
-                  ? 'bg-slate-200 dark:bg-white/10 text-slate-950 dark:text-white shadow-md' 
-                  : 'hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400'
+                isActive
+                  ? 'mrx-nav-active font-semibold'
+                  : 'hover:bg-white/80 dark:hover:bg-mrx-inset-dark/70 text-gray-600 dark:text-zinc-400 hover:shadow-mrx-sm dark:hover:shadow-none'
               }`}
             >
-              {/* Active Indicator Light */}
-              {isActive && (
-                <div 
-                  className="absolute left-0 w-1.5 h-6 rounded-r-full transition-all duration-500" 
-                  style={{ backgroundColor: item.color, boxShadow: `0 0 15px ${item.color}` }}
-                ></div>
-              )}
-
-              {/* Icon */}
-              <span className={`text-2xl transition-all duration-500 ${
-                isActive ? 'scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : 'grayscale-0 opacity-70 group-hover:opacity-100 group-hover:scale-110'
-              }`}>
-                {item.icon}
-              </span>
-
-              {/* Label - Larger and Brighter */}
+              <span className="text-xl leading-none">{item.icon}</span>
               {!isCollapsed && (
-                <span 
-                  className={`font-black text-[11px] tracking-widest uppercase transition-all duration-300 whitespace-nowrap ${
-                    isActive ? 'text-slate-950 dark:text-white' : 'group-hover:text-slate-900 dark:group-hover:text-slate-200'
-                  }`}
-                >
-                  {item.label}
-                </span>
-              )}
-
-              {/* Tooltip for Collapsed State */}
-              {isCollapsed && (
-                <div className="absolute left-24 px-4 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-950 text-[10px] font-black uppercase tracking-widest rounded-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap shadow-2xl border border-white/10 z-[100]">
-                  {item.label}
-                </div>
+                <span className="font-semibold text-sm truncate">{t(item.labelKey)}</span>
               )}
             </button>
           );
         })}
       </nav>
-
-      {/* Collapse Toggle Footer */}
-      <div className="p-6 border-t border-slate-200 dark:border-white/5">
-        <button 
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className={`w-full h-12 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 flex items-center transition-all group ${
-            isCollapsed ? 'justify-center' : 'px-4 gap-4'
-          }`}
-        >
-          <span className={`text-xs opacity-40 group-hover:opacity-100 transition-transform duration-500 ${isCollapsed ? 'rotate-180' : ''}`}>
-            ◀
-          </span>
-          {!isCollapsed && (
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300">
-              Collapse Panel
-            </span>
-          )}
-        </button>
-      </div>
     </aside>
   );
 };

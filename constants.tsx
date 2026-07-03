@@ -163,3 +163,37 @@ export const INITIAL_SCORES = {
   nausea: 0,
   headache: 0
 };
+
+export const NAV_ITEMS = [
+  { id: 'home', label: 'Your Overview', shortLabel: 'Overview', icon: '🏠', mobile: true },
+  { id: 'profile', label: 'Bio Profile', shortLabel: 'Bio', icon: '🧬', mobile: true },
+  { id: 'assistant', label: 'Ask MRX', shortLabel: 'Ask', icon: '🧠', mobile: true },
+  { id: 'interactions', label: 'Interaction Map', shortLabel: 'Mix', icon: '🧩', mobile: false },
+  { id: 'timeline', label: 'Symptom Trends', shortLabel: 'Trends', icon: '📈', mobile: false },
+  { id: 'meds', label: 'My Pills', shortLabel: 'Pills', icon: '💊', mobile: true },
+  { id: 'checkin', label: 'How I Feel', shortLabel: 'Feel', icon: '📝', mobile: true },
+  { id: 'reports', label: 'For Your Doctor', shortLabel: 'Doctor', icon: '📋', mobile: false },
+  { id: 'safety', label: 'Urgent Help', shortLabel: 'Help', icon: '🚨', mobile: false },
+  { id: 'diagnostics', label: 'App Status', shortLabel: 'Status', icon: '📡', mobile: false },
+  { id: 'settings', label: 'Account & Data', shortLabel: 'Account', icon: '⚙️', mobile: false },
+  { id: 'legal', label: 'Privacy & Terms', shortLabel: 'Legal', icon: '⚖️', mobile: false },
+] as const;
+
+export const PAGE_COPY: Record<string, { title: string; subtitle: string; icon: string; color: string }> = {
+  home: { title: 'Your Overview', subtitle: 'What matters today', icon: '🏠', color: '#3b82f6' },
+  profile: { title: 'Bio Profile', subtitle: 'Your health baseline', icon: '🧬', color: '#10b981' },
+  assistant: { title: 'Ask MRX', subtitle: 'Medication questions, answered', icon: '🧠', color: '#6366f1' },
+  interactions: { title: 'Interaction Map', subtitle: 'How your pills mix together', icon: '🧩', color: '#f59e0b' },
+  timeline: { title: 'Symptom Trends', subtitle: 'Changes over time', icon: '📈', color: '#06b6d4' },
+  meds: { title: 'My Pills', subtitle: 'What you take each day', icon: '💊', color: '#8b5cf6' },
+  checkin: { title: 'How I Feel', subtitle: 'Log today\'s symptoms', icon: '📝', color: '#f59e0b' },
+  reports: { title: 'For Your Doctor', subtitle: 'Shareable visit summary', icon: '📋', color: '#f43f5e' },
+  safety: { title: 'Urgent Help', subtitle: 'When something feels wrong', icon: '🚨', color: '#ef4444' },
+  diagnostics: { title: 'App Status', subtitle: 'Services & connectivity', icon: '📡', color: '#34d399' },
+  settings: { title: 'Account & Data', subtitle: 'Privacy, export, preferences', icon: '⚙️', color: '#64748b' },
+  legal: { title: 'Privacy & Terms', subtitle: 'Policies and compliance', icon: '⚖️', color: '#94a3b8' },
+  faq: { title: 'Common Questions', subtitle: 'How MRX works', icon: '❓', color: '#3b82f6' },
+};
+
+export const getPageCopy = (tabId: string) =>
+  PAGE_COPY[tabId] ?? { title: 'MRX Health', subtitle: 'Medication safety tracker', icon: '⬡', color: '#3b82f6' };

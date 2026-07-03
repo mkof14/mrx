@@ -22,7 +22,7 @@ export async function decodeAudioData(
   data: Uint8Array,
   ctx: AudioContext,
   sampleRate: number,
-  numChannels: number,
+  numChannels: number
 ): Promise<AudioBuffer> {
   const dataInt16 = new Int16Array(data.buffer);
   const frameCount = dataInt16.length / numChannels;
@@ -35,4 +35,74 @@ export async function decodeAudioData(
     }
   }
   return buffer;
+}
+
+export interface TtsPlaybackPayload {
+  audio: string | null;
+  format?: 'mp3' | 'pcm';
+  sampleRate?: number;
+}
+
+/** Reliable MP3 playback via HTMLAudioElement (works after user gesture). */
+function playMp3Base64(base64: string, speechSpeed = 1): Promise<void> {
+  const bytes = decodeBase64(base64);
+  const copy = new Uint8Array(bytes);
+  const blob = new Blob([copy], { type: 'audio/mpeg' });
+  const url = URL.createObjectURL(blob);
+  const audio = new Audio(url);
+  audio.playbackRate = Math.min(2, Math.max(0.5, speechSpeed));
+
+  return new Promise((resolve, reject) => {
+    const cleanup = () => URL.revokeObjectURL(url);
+    audio.onended = () => {
+      cleanup();
+      resolve();
+    };
+    audio.onerror = () => {
+      cleanup();
+      reject(new Error('MP3 playback failed'));
+    };
+    void audio.play().catch((err) => {
+      cleanup();
+      reject(err);
+    });
+  });
+}
+
+export async function playTtsAudio(
+  payload: TtsPlaybackPayload,
+  speechSpeed = 1,
+  existingCtx?: AudioContext | null
+): Promise<AudioContext | null> {
+  if (!payload.audio) {
+    throw new Error('No audio data');
+  }
+
+  if (payload.format === 'mp3') {
+    await playMp3Base64(payload.audio, speechSpeed);
+    return existingCtx || null;
+  }
+
+  const audioCtx = existingCtx || new AudioContext();
+  if (audioCtx.state === 'suspended') {
+    await audioCtx.resume();
+  }
+
+  const bytes = decodeBase64(payload.audio);
+  const buffer = await decodeAudioData(bytes, audioCtx, payload.sampleRate || 24000, 1);
+
+  await new Promise<void>((resolve, reject) => {
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    source.playbackRate.value = Math.min(2, Math.max(0.5, speechSpeed));
+    source.connect(audioCtx.destination);
+    source.onended = () => resolve();
+    try {
+      source.start(0);
+    } catch (err) {
+      reject(err);
+    }
+  });
+
+  return audioCtx;
 }

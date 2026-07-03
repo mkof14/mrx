@@ -2,7 +2,9 @@
 import React from 'react';
 import { SymptomEntry, Medication } from '../types';
 import { SYMPTOM_CATEGORIES } from '../constants';
-import SectionHero from './SectionHero';
+import { useI18n } from '../i18n/I18nContext';
+import PageShell from './PageShell';
+import PageCard, { PageSectionTitle } from './PageCard';
 
 interface Props {
   medications: Medication[];
@@ -17,11 +19,12 @@ interface Props {
   }>>;
 }
 
-const DailyCheckIn: React.FC<Props> = ({ medications, onSubmit, draft, setDraft }) => {
-  const { scores, factors } = draft;
+const DailyCheckIn: React.FC<Props> = ({ onSubmit, draft, setDraft }) => {
+  const { t } = useI18n();
+  const { scores } = draft;
 
   const updateScore = (id: string, value: number) => {
-    setDraft(prev => ({ ...prev, scores: { ...prev.scores, [id]: value } }));
+    setDraft((prev) => ({ ...prev, scores: { ...prev.scores, [id]: value } }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -29,103 +32,77 @@ const DailyCheckIn: React.FC<Props> = ({ medications, onSubmit, draft, setDraft 
     const entry: SymptomEntry = {
       log_iso: new Date().toISOString(),
       sleep_hours: 8,
-      alcohol: factors.alcohol,
-      high_stress: factors.stress,
+      alcohol: draft.factors.alcohol,
+      high_stress: draft.factors.stress,
       new_supplement: false,
-      symptom_scales: { ...scores } as any,
-      notes: ""
+      symptom_scales: { ...scores } as SymptomEntry['symptom_scales'],
+      notes: ''
     };
     onSubmit(entry);
   };
 
+  const avgScore =
+    Object.values(scores).reduce((a, b) => a + b, 0) / Math.max(1, Object.values(scores).length);
+
   return (
-    <form onSubmit={handleSubmit} className="animate-slide-up pb-32">
-      <SectionHero 
-        title="Check-In" 
-        subtitle="Daily Bio-Feedback" 
-        icon="📝" 
-        color="#f59e0b" 
-      />
-
-      <div className="max-w-4xl mx-auto space-y-20 px-6">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-10 rounded-[4rem] shadow-2xl flex flex-col md:flex-row items-center justify-between gap-10">
-          <div className="space-y-2 text-center md:text-left">
-             <h3 className="text-sm font-black text-slate-900 dark:text-slate-100 uppercase tracking-widest">Biological Delta</h3>
-             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Precision reporting for clinical analysis.</p>
+    <PageShell tabId="checkin" narrow>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <PageCard padding="sm" className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-gradient-to-r from-amber-500/5 to-violet-500/5">
+          <div>
+            <PageSectionTitle>{t('checkin.header')}</PageSectionTitle>
+            <p className="text-xs text-slate-500 mt-1">{t('checkin.headerDesc')}</p>
           </div>
-          <div className="flex items-center gap-6">
-            <div className="flex flex-col items-center">
-              <div className="w-4 h-4 rounded-full bg-blue-500 mb-2"></div>
-              <span className="text-[9px] font-black uppercase text-slate-400">Baseline</span>
+          <div className="flex items-center gap-4 text-center">
+            <div>
+              <p className="text-2xl font-black text-clinical-600">{avgScore.toFixed(1)}</p>
+              <p className="text-[10px] text-slate-400">{t('home.stability.title')}</p>
             </div>
-            <div className="w-16 h-0.5 bg-slate-200 dark:bg-white/10"></div>
-            <div className="flex flex-col items-center">
-              <div className="w-4 h-4 rounded-full bg-red-500 mb-2"></div>
-              <span className="text-[9px] font-black uppercase text-slate-400">Deviation</span>
+            <div className="flex items-center gap-3 text-[10px] text-slate-400">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500" />{t('checkin.scaleLow')}</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500" />{t('checkin.scaleHigh')}</span>
             </div>
           </div>
-        </div>
+        </PageCard>
 
-        <div className="space-y-16">
-          {SYMPTOM_CATEGORIES.map(cat => {
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {SYMPTOM_CATEGORIES.map((cat) => {
             const val = scores[cat.id] || 0;
             const intensityColor = val > 7 ? 'text-red-500' : val > 3 ? 'text-amber-500' : 'text-blue-500';
-            
-            return (
-              <div key={cat.id} className="group relative bg-white dark:bg-slate-900/40 p-12 rounded-[4rem] border border-slate-100 dark:border-white/5 transition-all hover:shadow-2xl">
-                <div className="flex justify-between items-end mb-10">
-                  <div className="flex items-center gap-6">
-                    <div className="w-20 h-20 rounded-[2.5rem] bg-slate-50 dark:bg-white/5 flex items-center justify-center text-5xl shadow-inner group-hover:scale-110 transition-transform">
-                      {cat.icon}
-                    </div>
-                    <div className="space-y-1">
-                      <h3 className="text-3xl font-black text-slate-900 dark:text-slate-100 uppercase tracking-tighter leading-none">{cat.label}</h3>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">{cat.description}</p>
-                    </div>
-                  </div>
-                  <div className={`text-6xl font-black tracking-tighter italic leading-none transition-colors ${intensityColor}`}>
-                    {val}
-                  </div>
-                </div>
-                
-                <div className="space-y-10">
-                  <input 
-                    type="range" min="0" max="10" 
-                    value={val}
-                    onChange={e => updateScore(cat.id, parseInt(e.target.value))}
-                    className="bio-slider w-full"
-                  />
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="p-6 bg-slate-50 dark:bg-white/5 rounded-3xl border border-slate-100 dark:border-white/10">
-                      <span className="text-[9px] font-black uppercase text-blue-500 tracking-widest block mb-2">Score 0-3</span>
-                      <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 italic leading-relaxed">{cat.lowBreakdown}</p>
-                    </div>
-                    <div className="p-6 bg-slate-50 dark:bg-white/5 rounded-3xl border border-slate-100 dark:border-white/10">
-                      <span className="text-[9px] font-black uppercase text-red-500 tracking-widest block mb-2">Score 8-10</span>
-                      <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 italic leading-relaxed">{cat.highBreakdown}</p>
-                    </div>
-                  </div>
 
-                  <div className="p-8 bg-clinical-500/5 rounded-[2.5rem] border border-clinical-500/10">
-                    <p className="text-[11px] font-bold text-slate-600 dark:text-slate-300 leading-relaxed italic uppercase tracking-wider">
-                      {cat.detailedExplanation}
-                    </p>
+            return (
+              <PageCard key={cat.id} padding="sm" hover>
+                <div className="flex items-center gap-3 mb-3">
+                  <div
+                    className="w-11 h-11 rounded-xl flex items-center justify-center text-2xl shrink-0"
+                    style={{ backgroundColor: `${cat.accent}22` }}
+                  >
+                    {cat.icon}
                   </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">{cat.label}</p>
+                    <p className="text-[10px] text-slate-400 truncate">{cat.simpleHint}</p>
+                  </div>
+                  <span className={`text-2xl font-black tabular-nums ${intensityColor}`}>{val}</span>
                 </div>
-              </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="10"
+                  value={val}
+                  onChange={(e) => updateScore(cat.id, parseInt(e.target.value, 10))}
+                  className="bio-slider w-full"
+                  style={{ accentColor: cat.accent }}
+                />
+              </PageCard>
             );
           })}
         </div>
 
-        <button 
-          type="submit"
-          className="w-full bg-[#020617] dark:bg-white text-white dark:text-slate-950 py-12 rounded-[3.5rem] font-black text-sm uppercase tracking-[0.8em] shadow-2xl transition-all hover:scale-[1.01] active:scale-95 border-b-8 border-clinical-600"
-        >
-          Synchronize Log ➔
+        <button type="submit" className="w-full mrx-btn-primary py-4 sticky bottom-24 lg:bottom-8 z-20 shadow-lg">
+          {t('checkin.save')}
         </button>
-      </div>
-    </form>
+      </form>
+    </PageShell>
   );
 };
 

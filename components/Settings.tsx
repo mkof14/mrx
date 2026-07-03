@@ -1,7 +1,11 @@
 
-import React from 'react';
-import { UserProfile, AIVoice } from '../types';
-import SectionHero from './SectionHero';
+import React, { useState } from 'react';
+import { UserProfile, AIVoice, ELEVENLABS_VOICE_OPTIONS, normalizePreferredVoice } from '../types';
+import PageShell from './PageShell';
+import PageCard, { PageSectionTitle } from './PageCard';
+import LanguageSelector from './LanguageSelector';
+import { useI18n } from '../i18n/I18nContext';
+import { api } from '../services/apiClient';
 
 interface SettingsProps {
   profile: UserProfile;
@@ -9,111 +13,163 @@ interface SettingsProps {
   theme: 'light' | 'dark';
   toggleTheme: () => void;
   clearAllData: () => void;
+  onLogout: () => void;
 }
 
-const Settings: React.FC<SettingsProps> = ({ profile, setProfile, theme, toggleTheme, clearAllData }) => {
-  const voices: AIVoice[] = ['Zephyr', 'Puck', 'Charon', 'Kore', 'Fenrir'];
+const Settings: React.FC<SettingsProps> = ({ profile, setProfile, theme, toggleTheme, clearAllData, onLogout }) => {
+  const { t } = useI18n();
+  const voices: AIVoice[] = ELEVENLABS_VOICE_OPTIONS;
   const speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+  const [exportStatus, setExportStatus] = useState<string | null>(null);
 
-  const handleVercelDeploy = () => {
-    const repoUrl = window.location.origin; // Simplified for demo
-    window.open(`https://vercel.com/new/clone?repository-url=${encodeURIComponent(repoUrl)}&env=API_KEY&project-name=mrx-health-instance&repository-name=mrx-health`, '_blank');
+  const handleExport = async () => {
+    try {
+      const data = await api.data.exportAll();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `mrx-export-${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      setExportStatus(t('settings.exportOk'));
+    } catch {
+      setExportStatus(t('settings.exportFail'));
+    }
   };
 
   return (
-    <div className="animate-slide-up pb-32">
-      <SectionHero 
-        title="Settings" 
-        subtitle="Neural Core Calibration" 
-        icon="⚙️" 
-        color="#64748b" 
-      />
+    <PageShell tabId="settings" narrow>
+        <PageCard padding="md">
+          <div className="flex items-center justify-between gap-4">
+            <PageSectionTitle>{t('common.language')}</PageSectionTitle>
+            <LanguageSelector onChange={(code) => setProfile({ ...profile, preferred_language: code })} />
+          </div>
+        </PageCard>
 
-      <div className="max-w-4xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Appearance */}
-        <div className="bg-white dark:bg-slate-900 p-10 rounded-[3.5rem] border border-slate-200 dark:border-white/5 shadow-2xl space-y-8">
-          <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">Appearance</h3>
-          <div className="flex items-center justify-between bg-slate-50 dark:bg-white/5 p-6 rounded-2xl border border-slate-100 dark:border-white/5 transition-all">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <PageCard padding="sm" className="space-y-4">
+          <PageSectionTitle>{t('tools.billingTitle')}</PageSectionTitle>
+          <p className="text-sm text-slate-500">{t('tools.billingDesc')}</p>
+          <p className="text-xs font-semibold">
+            {profile.is_subscribed ? '✓ Active' : '— Not subscribed'}
+          </p>
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                const res = await api.billing.checkout();
+                if (res.url) window.location.href = res.url;
+                else if (res.mock) {
+                  const confirmed = await api.billing.confirmMock();
+                  if (confirmed.profile) setProfile({ ...profile, ...(confirmed.profile as UserProfile) });
+                }
+              } catch {
+                /* ignore */
+              }
+            }}
+            className="mrx-btn-primary w-full"
+          >
+            {t('tools.billingBtn')}
+          </button>
+        </PageCard>
+
+        <PageCard padding="sm" className="space-y-4">
+          <PageSectionTitle>{t('safety.emergencyNumber')}</PageSectionTitle>
+          <select
+            value={profile.emergency_region || ''}
+            onChange={(e) =>
+              setProfile({
+                ...profile,
+                emergency_region: (e.target.value || null) as UserProfile['emergency_region']
+              })
+            }
+            className="mrx-input"
+          >
+            <option value="">Auto (from language)</option>
+            <option value="US">US — 911</option>
+            <option value="EU">EU — 112</option>
+            <option value="RU">RU — 103</option>
+            <option value="UK">UK — 999</option>
+            <option value="IL">IL — 101</option>
+            <option value="CN">CN — 120</option>
+          </select>
+        </PageCard>
+
+        <PageCard padding="sm" className="space-y-4">
+          <PageSectionTitle>{t('settings.appearance')}</PageSectionTitle>
+          <div className="flex items-center justify-between bg-mrx-inset dark:bg-mrx-inset-dark p-6 rounded-2xl border border-mrx-line dark:border-mrx-line-dark transition-all">
             <div className="space-y-1">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-white">Dark Mode</span>
-              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Toggle clinical interface depth</p>
+              <span className="text-xs font-semibold text-slate-900 dark:text-white">{t('settings.darkMode')}</span>
+              <p className="text-xs text-slate-400">{t('settings.darkModeDesc')}</p>
             </div>
-            <button 
+            <button
               onClick={toggleTheme}
               className="relative w-14 h-7 bg-slate-200 dark:bg-slate-800 rounded-full p-1 transition-all duration-300"
             >
               <div className={`w-5 h-5 bg-clinical-500 rounded-full shadow-lg transition-transform duration-300 transform ${theme === 'dark' ? 'translate-x-7' : 'translate-x-0'}`}></div>
             </button>
           </div>
-        </div>
+        </PageCard>
 
-        {/* AI Voice Calibration */}
-        <div className="bg-white dark:bg-slate-900 p-10 rounded-[3.5rem] border border-slate-200 dark:border-white/5 shadow-2xl space-y-8">
-          <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">AI Voice Core</h3>
+        <PageCard padding="sm" className="space-y-4">
+          <PageSectionTitle>{t('settings.voiceSection')}</PageSectionTitle>
           <div className="space-y-4">
-             <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest ml-4">Preferred Consultant</label>
-             <select 
-               value={profile.preferred_voice} 
-               onChange={(e) => setProfile({ ...profile, preferred_voice: e.target.value as AIVoice })}
-               className="w-full bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-2xl p-4 font-bold text-sm outline-none dark:text-white"
-             >
-               {voices.map(v => <option key={v} value={v}>{v}</option>)}
-             </select>
-          </div>
-          <div className="space-y-4">
-             <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest ml-4">Speaking Velocity</label>
-             <div className="grid grid-cols-3 gap-2">
-                {speeds.map(s => (
-                  <button 
-                    key={s}
-                    onClick={() => setProfile({ ...profile, speech_speed: s })}
-                    className={`py-3 rounded-xl font-black text-[10px] uppercase tracking-widest border transition-all ${profile.speech_speed === s ? 'bg-clinical-600 border-clinical-600 text-white shadow-lg' : 'bg-slate-50 dark:bg-white/5 border-transparent text-slate-500'}`}
-                  >
-                    {s}x
-                  </button>
-                ))}
-             </div>
-          </div>
-        </div>
-
-        {/* Vercel Deployment Hub */}
-        <div className="md:col-span-2 bg-white dark:bg-slate-900 p-12 rounded-[4rem] border border-slate-200 dark:border-white/5 shadow-2xl space-y-8 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-black/5 dark:bg-white/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
-          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="space-y-4 text-center md:text-left">
-              <h3 className="text-3xl font-black uppercase tracking-tighter italic text-slate-900 dark:text-white">Deployment Hub</h3>
-              <p className="text-sm font-bold text-slate-500 dark:text-slate-400 max-w-lg leading-relaxed italic">
-                Ready to take MRX.Health private? Deploy your own instance to Vercel in seconds. Ensure you have your Google AI API Key ready for the environment variables.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <span className="px-3 py-1 bg-slate-100 dark:bg-white/5 rounded-full text-[8px] font-black uppercase text-slate-400 border border-slate-200 dark:border-white/10">SPA Ready</span>
-                <span className="px-3 py-1 bg-slate-100 dark:bg-white/5 rounded-full text-[8px] font-black uppercase text-slate-400 border border-slate-200 dark:border-white/10">Edge Optimized</span>
-                <span className="px-3 py-1 bg-slate-100 dark:bg-white/5 rounded-full text-[8px] font-black uppercase text-slate-400 border border-slate-200 dark:border-white/10">Env: API_KEY</span>
-              </div>
-            </div>
-            <button 
-              onClick={handleVercelDeploy}
-              className="bg-black dark:bg-white text-white dark:text-black px-10 py-6 rounded-3xl font-black text-[10px] uppercase tracking-[0.3em] flex items-center gap-3 shadow-2xl hover:scale-105 active:scale-95 transition-all"
+            <label className="mrx-label">{t('settings.preferredVoice')}</label>
+            <select
+              value={normalizePreferredVoice(profile.preferred_voice)}
+              onChange={(e) => setProfile({ ...profile, preferred_voice: e.target.value as AIVoice })}
+              className="mrx-input"
             >
-              <svg width="20" height="20" viewBox="0 0 76 65" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M37.5274 0L75.0548 65H0L37.5274 0Z" fill="currentColor"/>
-              </svg>
-              Deploy to Vercel
-            </button>
+              {voices.map((v) => (
+                <option key={v} value={v}>{v}</option>
+              ))}
+            </select>
           </div>
-        </div>
+          <div className="space-y-4">
+            <label className="mrx-label">{t('settings.speechSpeed')}</label>
+            <div className="grid grid-cols-3 gap-2">
+              {speeds.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setProfile({ ...profile, speech_speed: s })}
+                  className={`py-3 rounded-xl text-xs font-semibold border transition-all ${profile.speech_speed === s ? 'bg-clinical-600 border-clinical-600 text-white' : 'bg-mrx-inset dark:bg-mrx-inset-dark border-transparent text-gray-500'}`}
+                >
+                  {s}x
+                </button>
+              ))}
+            </div>
+          </div>
+        </PageCard>
 
-        <div className="bg-white dark:bg-slate-900 p-10 rounded-[3.5rem] border border-slate-200 dark:border-white/5 shadow-2xl space-y-8">
-          <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">Privacy & Local Cache</h3>
-          <button onClick={() => confirm("Erase all biological data from local storage?") && clearAllData()} className="w-full py-5 rounded-2xl bg-rose-500/10 text-rose-600 font-black text-[9px] uppercase tracking-widest border border-rose-500/20 hover:bg-rose-500 hover:text-white transition-all">Clear All Local Data</button>
-        </div>
+        <PageCard padding="sm" className="md:col-span-2 space-y-4">
+          <PageSectionTitle>{t('settings.exportTitle')}</PageSectionTitle>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            {t('settings.exportDesc')}
+          </p>
+          <button
+            onClick={handleExport}
+            className="mrx-btn-primary w-full sm:w-auto"
+          >
+            {t('settings.exportBtn')}
+          </button>
+          {exportStatus && <p className="text-xs text-gray-500">{exportStatus}</p>}
+        </PageCard>
 
-        <div className="bg-slate-900 p-12 rounded-[4rem] text-white border border-white/5 shadow-2xl">
-           <h4 className="text-3xl font-black uppercase tracking-tighter mb-4 italic">Enterprise Sync</h4>
-           <p className="text-xs font-bold text-slate-500 italic uppercase tracking-widest">Coming soon: BioMath Portal access for verified clinicians and hospital networks.</p>
-        </div>
+        <PageCard padding="sm" className="space-y-3">
+          <PageSectionTitle>{t('settings.account')}</PageSectionTitle>
+          <button onClick={onLogout} className="w-full py-4 rounded-2xl bg-mrx-inset dark:bg-mrx-inset-dark text-gray-700 dark:text-zinc-300 text-sm font-semibold border border-mrx-line dark:border-mrx-line-dark hover:bg-gray-200 dark:hover:bg-zinc-700 transition-all">{t('settings.logout')}</button>
+          <button onClick={() => confirm(t('settings.deleteConfirm')) && clearAllData()} className="w-full py-4 rounded-2xl bg-rose-500/10 text-rose-600 text-sm font-semibold border border-rose-500/20 hover:bg-rose-500 hover:text-white transition-all">{t('settings.deleteBtn')}</button>
+        </PageCard>
+
+        <PageCard padding="sm" className="md:col-span-2 bg-mrx-inset dark:bg-mrx-inset-dark">
+          <PageSectionTitle>{t('settings.devTitle')}</PageSectionTitle>
+          <p className="text-sm text-gray-500 dark:text-zinc-500 leading-relaxed">
+            {t('settings.devDesc')}
+          </p>
+        </PageCard>
       </div>
-    </div>
+    </PageShell>
   );
 };
 

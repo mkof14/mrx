@@ -1,192 +1,182 @@
 import React, { useState, useEffect } from 'react';
-import SectionHero from './SectionHero';
-import { GoogleGenAI } from '@google/genai';
+import PageShell from './PageShell';
+import PageCard, { PageSectionTitle } from './PageCard';
+import { api } from '../services/apiClient';
+import { useI18n } from '../i18n/I18nContext';
 
 const SystemDiagnostics: React.FC = () => {
+  const { t } = useI18n();
   const [hwStatus, setHwStatus] = useState({ mic: 'PENDING', cam: 'PENDING', storage: 'PENDING' });
-  const [aiPing, setAiPing] = useState<{ status: string, latency: number | null }>({ status: 'IDLE', latency: null });
+  const [aiPing, setAiPing] = useState<{ status: string; latency: number | null; configured: boolean }>({
+    status: 'IDLE',
+    latency: null,
+    configured: false
+  });
   const [testLog, setTestLog] = useState<string[]>([]);
   const [isTesting, setIsTesting] = useState(false);
 
-  const addLog = (msg: string) => setTestLog(prev => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev].slice(0, 15));
+  const addLog = (msg: string) => setTestLog((prev) => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev].slice(0, 15));
 
   useEffect(() => {
     checkHardware();
-    checkStorage();
+    checkApiStatus();
   }, []);
 
+  const checkApiStatus = async () => {
+    try {
+      const status = await api.ai.status();
+      setAiPing((prev) => ({ ...prev, configured: status.configured }));
+      addLog(status.configured ? 'Server AI bridge: configured' : 'Server AI bridge: GEMINI_API_KEY missing');
+      if (status.tts?.configured) {
+        addLog(`TTS provider: ${status.tts.provider || 'unknown'}`);
+      } else {
+        addLog('TTS: set ELEVENLABS_API_KEY (recommended) or GEMINI_API_KEY');
+      }
+    } catch {
+      addLog('CRITICAL: Cannot reach MRX API server');
+    }
+  };
+
   const checkHardware = async () => {
-    addLog("Initializing Hardware Handshake...");
+    addLog('Initializing Hardware Handshake...');
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach(t => t.stop());
-      setHwStatus(prev => ({ ...prev, mic: 'ACTIVE' }));
-      addLog("Microphone hardware verified and accessible.");
-    } catch (e) {
-      setHwStatus(prev => ({ ...prev, mic: 'BLOCKED' }));
-      addLog("Microphone access denied or hardware missing.");
+      stream.getTracks().forEach((t) => t.stop());
+      setHwStatus((prev) => ({ ...prev, mic: 'ACTIVE' }));
+      addLog('Microphone hardware verified and accessible.');
+    } catch {
+      setHwStatus((prev) => ({ ...prev, mic: 'BLOCKED' }));
+      addLog('Microphone access denied or hardware missing.');
     }
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      stream.getTracks().forEach(t => t.stop());
-      setHwStatus(prev => ({ ...prev, cam: 'ACTIVE' }));
-      addLog("Camera hardware verified for Vision tasks.");
-    } catch (e) {
-      setHwStatus(prev => ({ ...prev, cam: 'BLOCKED' }));
-      addLog("Camera access denied (Vision scanner limited).");
+      stream.getTracks().forEach((t) => t.stop());
+      setHwStatus((prev) => ({ ...prev, cam: 'ACTIVE' }));
+      addLog('Camera hardware verified for Vision tasks.');
+    } catch {
+      setHwStatus((prev) => ({ ...prev, cam: 'BLOCKED' }));
+      addLog('Camera access denied (Vision scanner limited).');
     }
-  };
 
-  const checkStorage = () => {
-    const size = new Blob(Object.values(localStorage)).size;
-    setHwStatus(prev => ({ ...prev, storage: `${(size / 1024).toFixed(2)} KB` }));
-    addLog(`Local Cache Health: ${size} bytes utilized.`);
+    addLog('Data stored on secure server (not browser localStorage).');
+    setHwStatus((prev) => ({ ...prev, storage: 'Server DB' }));
   };
 
   const runFullDiagnostic = async () => {
     setIsTesting(true);
-    setAiPing({ status: 'TESTING', latency: null });
-    addLog("STRESS TEST: Sending complex dataset to Gemini 3 Pro...");
-    
-    const start = Date.now();
+    setAiPing((prev) => ({ ...prev, status: 'TESTING' }));
+    addLog('STRESS TEST: Sending heartbeat to server AI bridge...');
+
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: 'Perform a system heartbeat check. Return "HEALTH_OK" and current timestamp.',
-      });
-      
-      const text = response.text || "";
-      if (text.includes('HEALTH_OK')) {
-        const end = Date.now();
-        const lat = end - start;
-        setAiPing({ status: 'STABLE', latency: lat });
-        addLog(`SUCCESS: AI Cluster responded in ${lat}ms. Protocol verified.`);
+      const result = await api.ai.diagnostic();
+      if (result.status === 'STABLE' && result.latency) {
+        setAiPing({ status: 'STABLE', latency: result.latency, configured: result.configured });
+        addLog(`SUCCESS: AI Cluster responded in ${result.latency}ms via secure proxy.`);
       } else {
-        throw new Error("Unexpected response format");
+        throw new Error(result.error || 'Diagnostic failed');
       }
-    } catch (err) {
-      setAiPing({ status: 'FAILED', latency: null });
-      addLog("CRITICAL: AI Core sync failed. Check API_KEY or network layers.");
+    } catch {
+      setAiPing((prev) => ({ ...prev, status: 'FAILED', latency: null }));
+      addLog('CRITICAL: AI Core sync failed. Check server GEMINI_API_KEY.');
     } finally {
       setIsTesting(false);
     }
   };
 
   const services = [
-    { name: 'Neural Analysis', id: 'gemini-3-pro-preview', role: 'Advanced clinical reasoning & correlation', type: 'LLM' },
-    { name: 'Bio-Vision Scanner', id: 'gemini-3-flash-preview', role: 'OCR & pill identification from images', type: 'Multimodal' },
-    { name: 'Neural Chat', id: 'gemini-3-pro-search', role: 'Real-time grounding with Google Search', type: 'Agent' },
-    { name: 'Diction Synthesis', id: 'gemini-2.5-flash-tts', role: 'Clinical voice generation', type: 'Audio' },
-    { name: 'Stability Core', id: 'biomath-v2-local', role: 'Symptom variance mathematical index', type: 'Math' },
+    { name: t('diag.svcAnalysis'), id: 'gemini-2.5-pro', role: t('page.reports.subtitle'), type: 'AI' },
+    { name: t('diag.svcScan'), id: 'gemini-2.5-flash', role: t('meds.scan'), type: 'Vision' },
+    { name: t('diag.svcChat'), id: 'gemini-2.5-flash', role: t('page.assistant.subtitle'), type: 'Chat' },
+    { name: t('diag.svcVoice'), id: 'ElevenLabs', role: t('voice.subtitle'), type: 'Voice' },
+    { name: t('diag.svcWellness'), id: 'local', role: t('home.stability.title'), type: 'Score' }
   ];
 
   return (
-    <div className="animate-slide-up pb-32">
-      <SectionHero 
-        title="Diagnostics" 
-        subtitle="Full System Service Report" 
-        icon="📡" 
-        color="#34d399" 
-      />
-
-      <div className="max-w-7xl mx-auto px-6 space-y-12">
-        {/* Status Dashboard */}
+    <PageShell tabId="diagnostics">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="bg-slate-950 p-8 rounded-[3rem] border border-white/5 flex flex-col items-center justify-center text-center space-y-4">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">AI Latency</span>
-            <div className="text-4xl font-black text-white italic">{aiPing.latency ? `${aiPing.latency}ms` : '---'}</div>
-            <div className={`px-4 py-1 rounded-full text-[9px] font-black uppercase ${aiPing.status === 'STABLE' ? 'bg-emerald-500 text-white' : 'bg-slate-800 text-slate-400'}`}>
+          <PageCard padding="md" className="text-center bg-mrx-inset dark:bg-mrx-inset-dark">
+            <span className="text-xs font-semibold text-gray-500 block mb-2">{t('diag.latency')}</span>
+            <div className="text-3xl font-bold text-gray-900 dark:text-zinc-100">{aiPing.latency ? `${aiPing.latency}ms` : '—'}</div>
+            <div className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold ${aiPing.status === 'STABLE' ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-gray-600'}`}>
               {aiPing.status}
             </div>
-          </div>
-          
-          <div className="bg-slate-950 p-8 rounded-[3rem] border border-white/5 flex flex-col items-center justify-center text-center space-y-4">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Mic Status</span>
-            <div className={`text-4xl font-black italic ${hwStatus.mic === 'ACTIVE' ? 'text-emerald-500' : 'text-rose-500'}`}>
-              {hwStatus.mic === 'ACTIVE' ? 'READY' : 'ERROR'}
-            </div>
-            <span className="text-[9px] font-black text-slate-600 uppercase">Input Layer 01</span>
-          </div>
+          </PageCard>
 
-          <div className="bg-slate-950 p-8 rounded-[3rem] border border-white/5 flex flex-col items-center justify-center text-center space-y-4">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Cam Status</span>
-            <div className={`text-4xl font-black italic ${hwStatus.cam === 'ACTIVE' ? 'text-emerald-500' : 'text-rose-500'}`}>
-              {hwStatus.cam === 'ACTIVE' ? 'READY' : 'ERROR'}
+          <PageCard padding="md" className="text-center bg-mrx-inset dark:bg-mrx-inset-dark">
+            <span className="text-xs font-semibold text-gray-500 block mb-2">{t('diag.mic')}</span>
+            <div className={`text-3xl font-bold ${hwStatus.mic === 'ACTIVE' ? 'text-emerald-500' : 'text-rose-500'}`}>
+              {hwStatus.mic === 'ACTIVE' ? t('diag.ready') : t('diag.error')}
             </div>
-            <span className="text-[9px] font-black text-slate-600 uppercase">Visual Layer 02</span>
-          </div>
+          </PageCard>
 
-          <div className="bg-slate-950 p-8 rounded-[3rem] border border-white/5 flex flex-col items-center justify-center text-center space-y-4">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Local Cache</span>
-            <div className="text-4xl font-black text-white italic">{hwStatus.storage}</div>
-            <span className="text-[9px] font-black text-slate-600 uppercase">LocalStorage API</span>
-          </div>
+          <PageCard padding="md" className="text-center bg-mrx-inset dark:bg-mrx-inset-dark">
+            <span className="text-xs font-semibold text-gray-500 block mb-2">{t('diag.camera')}</span>
+            <div className={`text-3xl font-bold ${hwStatus.cam === 'ACTIVE' ? 'text-emerald-500' : 'text-rose-500'}`}>
+              {hwStatus.cam === 'ACTIVE' ? t('diag.ready') : t('diag.error')}
+            </div>
+          </PageCard>
+
+          <PageCard padding="md" className="text-center bg-mrx-inset dark:bg-mrx-inset-dark">
+            <span className="text-xs font-semibold text-gray-500 block mb-2">{t('diag.storage')}</span>
+            <div className="text-3xl font-bold text-gray-900 dark:text-zinc-100">{hwStatus.storage}</div>
+          </PageCard>
         </div>
 
-        {/* Technical Logs & Control */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-8 bg-white dark:bg-slate-900 rounded-[4rem] border border-slate-200 dark:border-white/5 p-12 shadow-3xl flex flex-col h-[500px]">
-            <div className="flex justify-between items-center mb-8">
-              <h3 className="text-xl font-black uppercase italic tracking-tighter dark:text-white">Neural Benchmarks</h3>
-              <button 
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+          <PageCard padding="sm" className="lg:col-span-8 flex flex-col h-[420px]">
+            <div className="flex justify-between items-center mb-4">
+              <PageSectionTitle>{t('diag.testTitle')}</PageSectionTitle>
+              <button
+                type="button"
                 onClick={runFullDiagnostic}
                 disabled={isTesting}
-                className="bg-clinical-600 text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                className="mrx-btn-primary px-4 py-2 text-xs disabled:opacity-50"
               >
-                {isTesting ? 'Testing Cluster...' : 'Run Full Diagnostic'}
+                {isTesting ? t('diag.testing') : t('diag.testBtn')}
               </button>
             </div>
-            
-            <div className="flex-1 bg-black rounded-3xl p-8 font-mono text-[10px] text-emerald-500 overflow-y-auto custom-scrollbar border border-white/10 shadow-inner">
-               {testLog.map((log, i) => (
-                 <div key={i} className="mb-1 animate-in slide-in-from-left-2 duration-300">
-                   <span className="opacity-40 mr-2">{">>>"}</span> {log}
-                 </div>
-               ))}
-               {isTesting && <div className="animate-pulse">_</div>}
-            </div>
-          </div>
 
-          <div className="lg:col-span-4 space-y-6">
-            <div className="bg-clinical-600 p-10 rounded-[3.5rem] text-white shadow-2xl flex flex-col justify-center h-full">
-              <h4 className="text-2xl font-black uppercase tracking-tighter italic mb-4">Environment</h4>
-              <div className="space-y-4 text-[10px] font-black uppercase tracking-[0.2em] opacity-80">
-                <div className="flex justify-between"><span>Kernel</span><span>BioMath Core 2.5</span></div>
-                <div className="flex justify-between"><span>Region</span><span>Global Edge</span></div>
-                <div className="flex justify-between"><span>API Key</span><span>Active / Verified</span></div>
-                <div className="flex justify-between"><span>Auth Mode</span><span>Local Enclave</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Detailed Service Report */}
-        <div className="bg-white dark:bg-slate-900 rounded-[4.5rem] border border-slate-200 dark:border-white/5 p-16 shadow-3xl overflow-hidden relative">
-          <div className="absolute top-0 right-0 p-24 opacity-5 pointer-events-none italic font-black text-9xl uppercase tracking-tighter">Report</div>
-          <div className="space-y-12 relative z-10">
-            <div className="flex items-center gap-6">
-              <div className="w-12 h-1 bg-clinical-600"></div>
-              <h2 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic">Operational Architecture</h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {services.map(s => (
-                <div key={s.id} className="p-10 bg-slate-50 dark:bg-white/5 rounded-[3rem] border border-slate-100 dark:border-white/10 group hover:border-emerald-500/30 transition-all duration-500">
-                  <div className="flex justify-between items-start mb-4">
-                     <h5 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight italic">{s.name}</h5>
-                     <span className="px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-full text-[7px] font-black uppercase tracking-widest">{s.type}</span>
-                  </div>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed mb-6 italic">{s.role}</p>
-                  <div className="text-[8px] font-mono text-slate-400 bg-black/5 dark:bg-white/5 p-2 rounded-lg">MODEL_ID: {s.id}</div>
+            <div className="flex-1 bg-slate-950 rounded-xl p-4 font-mono text-[10px] text-emerald-400 overflow-y-auto custom-scrollbar border border-white/5">
+              {testLog.map((log, i) => (
+                <div key={i} className="mb-1">
+                  <span className="opacity-40 mr-2">&gt;</span>
+                  {log}
                 </div>
               ))}
+              {isTesting && <div className="animate-pulse text-emerald-300">…</div>}
             </div>
-          </div>
+          </PageCard>
+
+          <PageCard padding="sm" className="lg:col-span-4 bg-clinical-600 text-white flex flex-col justify-center">
+            <h4 className="text-lg font-bold mb-3">{t('diag.envTitle')}</h4>
+            <div className="space-y-2 text-xs opacity-90">
+              <div className="flex justify-between"><span>MRX</span><span>1.1</span></div>
+              <div className="flex justify-between"><span>AI</span><span>{aiPing.configured ? 'OK' : '—'}</span></div>
+              <div className="flex justify-between"><span>{t('settings.account')}</span><span>JWT</span></div>
+            </div>
+          </PageCard>
         </div>
-      </div>
-    </div>
+
+        <PageCard padding="sm">
+          <PageSectionTitle className="mb-4">{t('diag.servicesTitle')}</PageSectionTitle>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {services.map((s) => (
+              <div
+                key={s.id}
+                className="p-4 bg-mrx-inset dark:bg-mrx-inset-dark rounded-xl border border-mrx-line dark:border-mrx-line-dark hover:border-emerald-500/30 transition-colors"
+              >
+                <div className="flex justify-between items-start gap-2 mb-2">
+                  <h5 className="text-sm font-bold text-slate-900 dark:text-white">{s.name}</h5>
+                  <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 rounded-full text-[9px] font-semibold shrink-0">{s.type}</span>
+                </div>
+                <p className="text-[11px] text-slate-500 leading-relaxed">{s.role}</p>
+                <p className="text-[9px] font-mono text-slate-400 mt-2 truncate">{s.id}</p>
+              </div>
+            ))}
+          </div>
+        </PageCard>
+    </PageShell>
   );
 };
 

@@ -1,32 +1,58 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Footer from './Footer';
 import Legal from './Legal';
 import FAQ from './FAQ';
+import MrxLogo from './MrxLogo';
+import LanguageSelector from './LanguageSelector';
+import ThemeToggle from './ThemeToggle';
+import PasswordField from './PasswordField';
+import { useI18n } from '../i18n/I18nContext';
+import { isLocale } from '../i18n/languages';
+import { api } from '../services/apiClient';
 
 interface AuthProps {
-  onLogin: (email: string) => void;
+  onAuth: (mode: 'login' | 'register', email: string, password: string, name?: string) => Promise<void>;
+  onGoogleAuth: (credential: string) => Promise<void>;
+  authError?: string | null;
   theme: 'light' | 'dark';
   toggleTheme: () => void;
+  onLanguageChange?: (code: string) => void;
 }
 
-const Auth: React.FC<AuthProps> = ({ onLogin, theme, toggleTheme }) => {
+const Auth: React.FC<AuthProps> = ({
+  onAuth,
+  onGoogleAuth,
+  authError,
+  theme,
+  toggleTheme,
+  onLanguageChange
+}) => {
+  const { t, locale, setLocale } = useI18n();
   const [showLoginForm, setShowLoginForm] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [activeScanName, setActiveScanName] = useState('Analyzing...');
+  const [activeScanName, setActiveScanName] = useState('Sertraline');
   const [showLegalModal, setShowLegalModal] = useState(false);
   const [showFAQModal, setShowFAQModal] = useState(false);
   const [initialLegalSection, setInitialLegalSection] = useState('privacy');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [scanColorIdx, setScanColorIdx] = useState(0);
+  const [googleConfigured, setGoogleConfigured] = useState(false);
+  const googleBtnRef = useRef<HTMLDivElement>(null);
 
   const scanColors = [
-    'rgba(59, 130, 246, 0.8)', // Blue
-    'rgba(16, 185, 129, 0.8)', // Emerald
-    'rgba(139, 92, 246, 0.8)', // Purple
-    'rgba(245, 158, 11, 0.8)', // Amber
+    'rgba(37, 99, 235, 0.85)',
+    'rgba(16, 185, 129, 0.85)',
+    'rgba(139, 92, 246, 0.85)',
+    'rgba(245, 158, 11, 0.85)'
   ];
+
+  const handleLocaleChange = (code: string) => {
+    if (isLocale(code)) setLocale(code);
+    onLanguageChange?.(code);
+  };
 
   useEffect(() => {
     const names = ['Sertraline', 'Amoxicillin', 'Metformin', 'Escitalopram', 'Ibuprofen', 'Lisinopril', 'Xanax'];
@@ -37,18 +63,79 @@ const Auth: React.FC<AuthProps> = ({ onLogin, theme, toggleTheme }) => {
       idx = (idx + 1) % names.length;
     }, 1800);
     return () => clearInterval(interval);
+  }, [scanColors.length]);
+
+  useEffect(() => {
+    api.auth.googleStatus().then((r) => setGoogleConfigured(r.configured)).catch(() => setGoogleConfigured(false));
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email && password) {
-      onLogin(email);
-    }
-  };
+  const handleGoogleCredential = useCallback(
+    async (credential: string) => {
+      setIsSubmitting(true);
+      try {
+        await onGoogleAuth(credential);
+      } catch {
+        // error via authError prop
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [onGoogleAuth]
+  );
 
-  const handleGoogleLogin = () => {
-    // Simulated Google Auth
-    onLogin('google-user@gmail.com');
+  useEffect(() => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId || !googleConfigured || !showLoginForm || !googleBtnRef.current) return;
+
+    const mountGoogleButton = () => {
+      if (!window.google?.accounts?.id || !googleBtnRef.current) return;
+      googleBtnRef.current.innerHTML = '';
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: (response) => {
+          if (response.credential) void handleGoogleCredential(response.credential);
+        }
+      });
+      window.google.accounts.id.renderButton(googleBtnRef.current, {
+        theme: theme === 'dark' ? 'filled_black' : 'outline',
+        size: 'large',
+        width: 320,
+        text: 'continue_with',
+        locale
+      });
+    };
+
+    if (window.google?.accounts?.id) {
+      mountGoogleButton();
+      return;
+    }
+
+    const existing = document.querySelector('script[data-mrx-google]');
+    if (existing) {
+      existing.addEventListener('load', mountGoogleButton);
+      return () => existing.removeEventListener('load', mountGoogleButton);
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.dataset.mrxGoogle = 'true';
+    script.onload = mountGoogleButton;
+    document.body.appendChild(script);
+  }, [googleConfigured, showLoginForm, theme, locale, handleGoogleCredential]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return;
+    setIsSubmitting(true);
+    try {
+      await onAuth(isRegistering ? 'register' : 'login', email, password, isRegistering ? email.split('@')[0] : undefined);
+    } catch {
+      // error shown via authError prop
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const openLegal = (section: string = 'privacy') => {
@@ -56,126 +143,110 @@ const Auth: React.FC<AuthProps> = ({ onLogin, theme, toggleTheme }) => {
     setShowLegalModal(true);
   };
 
-  const openFAQ = () => {
-    setShowFAQModal(true);
-  };
-
   return (
-    <div className="min-h-screen bg-white dark:bg-[#020617] flex flex-col transition-colors duration-700 relative overflow-x-hidden font-sans">
-      {/* Visual background accents */}
-      <div className="absolute top-[-5%] left-[-5%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full animate-pulse-soft pointer-events-none"></div>
-      <div className="absolute bottom-[20%] right-[-5%] w-[40%] h-[40%] bg-emerald-500/10 blur-[100px] rounded-full animate-float pointer-events-none"></div>
+    <div className="min-h-screen bg-mrx-canvas dark:bg-mrx-canvas-dark flex flex-col transition-colors duration-300 relative overflow-x-hidden font-sans">
+      <div className="absolute top-[-10%] left-[-10%] w-[45%] h-[45%] bg-clinical-500/10 blur-[120px] rounded-full animate-pulse-soft pointer-events-none" />
+      <div className="absolute bottom-[15%] right-[-10%] w-[40%] h-[40%] bg-emerald-500/10 blur-[100px] rounded-full animate-float pointer-events-none" />
+      <div className="absolute top-[40%] left-[30%] w-[25%] h-[25%] bg-violet-500/5 blur-[80px] rounded-full pointer-events-none" />
 
-      {/* Navigation Header */}
-      <nav className="sticky top-0 left-0 right-0 p-8 flex justify-between items-center z-50 max-w-7xl mx-auto w-full bg-white/50 dark:bg-[#020617]/50 backdrop-blur-md">
-        <div className="flex items-center gap-3 group cursor-pointer">
-          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg group-hover:rotate-12 transition-transform">M</div>
-          <div className="flex flex-col">
-            <span className="text-sm font-black tracking-tight text-slate-900 dark:text-white uppercase group-hover:text-blue-600 transition-colors">MRX.Health</span>
-            <span className="text-[6px] font-black uppercase tracking-[0.4em] text-blue-600 dark:text-blue-400 leading-none">Medication Reactions eXplorer</span>
+      <nav className="sticky top-0 z-50 w-full border-b border-mrx-line dark:border-mrx-line-dark bg-mrx-canvas/85 dark:bg-mrx-sidebar-dark/85 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto p-5 flex justify-between items-center gap-4">
+          <MrxLogo size="md" className="cursor-pointer" />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <ThemeToggle theme={theme} onToggle={toggleTheme} />
+            <LanguageSelector align="right" onChange={handleLocaleChange} />
+            {!showLoginForm ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRegistering(false);
+                  setShowLoginForm(true);
+                }}
+                className="mrx-btn-primary px-5 sm:px-8 py-2.5 sm:py-3 text-xs sm:text-sm"
+              >
+                {t('auth.logIn')}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowLoginForm(false)}
+                className="text-sm font-semibold text-gray-500 dark:text-zinc-400 hover:text-clinical-600 px-3"
+              >
+                {t('auth.close')}
+              </button>
+            )}
           </div>
-        </div>
-        <div className="flex items-center gap-6">
-          <button onClick={toggleTheme} className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl transition-all">
-            {theme === 'light' ? '🌘' : '☀️'}
-          </button>
-          {!showLoginForm && (
-            <button 
-              onClick={() => { setIsRegistering(false); setShowLoginForm(true); }}
-              className="bg-slate-900/10 dark:bg-white/10 backdrop-blur-xl text-slate-900 dark:text-white border border-slate-900/20 dark:border-white/20 px-8 py-3 rounded-full font-black text-xs uppercase tracking-[0.2em] hover:bg-blue-600 hover:text-white dark:hover:bg-blue-500 dark:hover:text-white hover:scale-105 active:scale-95 transition-all shadow-xl"
-            >
-              Log In
-            </button>
-          )}
-          {showLoginForm && (
-            <button 
-              onClick={() => setShowLoginForm(false)}
-              className="text-slate-500 dark:text-slate-400 font-black text-xs uppercase tracking-widest hover:text-blue-600 transition-colors px-6"
-            >
-              Close
-            </button>
-          )}
         </div>
       </nav>
 
       <main className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
         {!showLoginForm ? (
-          /* LANDING VIEW */
-          <div className="max-w-6xl w-full space-y-20 py-10">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-              <div className="space-y-10 text-center lg:text-left animate-in fade-in slide-in-from-left-8 duration-1000">
-                <div className="space-y-6">
-                  <h1 className="text-6xl md:text-8xl font-black text-slate-900 dark:text-white tracking-tighter leading-none italic">
-                    Know your medicine <br/>
-                    <span className="text-blue-600">inside out.</span>
-                  </h1>
-                  <p className="text-slate-500 dark:text-slate-400 font-bold text-lg md:text-2xl max-w-xl mx-auto lg:mx-0 leading-tight italic">
-                    Stop the guesswork. We track your pills and monitor how you feel, keeping you safe and your doctor informed.
-                  </p>
+          <div className="max-w-6xl w-full space-y-10 py-6 lg:py-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 items-center">
+              <div className="space-y-6 text-center lg:text-left animate-in fade-in slide-in-from-left-8 duration-700">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-clinical-50 dark:bg-clinical-950/40 border border-clinical-200 dark:border-clinical-800 text-clinical-700 dark:text-clinical-300 text-xs font-semibold">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  {t('home.live.tag')}
                 </div>
-
-                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6">
-                  <button 
-                    onClick={() => { setIsRegistering(true); setShowLoginForm(true); }}
-                    className="bg-blue-600 text-white px-20 py-8 rounded-[3rem] font-black text-2xl shadow-2xl shadow-blue-500/40 hover:scale-105 active:scale-95 transition-all w-full sm:w-auto uppercase tracking-wider"
-                  >
-                    Start Tracking ➔
-                  </button>
-                </div>
+                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-zinc-50 tracking-tight leading-[1.08]">
+                  {t('auth.heroTitle1')}
+                  <br />
+                  <span className="text-clinical-600 dark:text-clinical-400">{t('auth.heroTitle2')}</span>
+                </h1>
+                <p className="text-gray-600 dark:text-zinc-400 text-lg md:text-xl max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                  {t('auth.heroSubtitle')}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsRegistering(true);
+                    setShowLoginForm(true);
+                  }}
+                  className="mrx-btn-primary px-10 py-4 text-base shadow-mrx-lg hover:scale-[1.02] active:scale-[0.98] transition-transform"
+                >
+                  {t('auth.startTracking')} →
+                </button>
               </div>
 
-              {/* REFINED HYPER-SCANNER ANIMATION */}
-              <div className="relative bg-slate-950 rounded-[4rem] p-10 md:p-12 border border-white/5 shadow-[0_0_120px_rgba(59,130,246,0.1)] overflow-hidden animate-in zoom-in-95 duration-1000 delay-300 min-h-[480px]">
-                
-                {/* RUNNING PIXEL TRACKS (Horizontal) */}
-                <div className="absolute inset-0 opacity-10 pointer-events-none overflow-hidden">
-                   <div className="absolute top-1/4 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500 to-transparent animate-running-track" style={{ backgroundSize: '200% 100%' }}></div>
-                   <div className="absolute top-1/2 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-emerald-500 to-transparent animate-running-track [animation-delay:0.5s]" style={{ backgroundSize: '200% 100%' }}></div>
-                   <div className="absolute top-3/4 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-purple-500 to-transparent animate-running-track [animation-delay:1s]" style={{ backgroundSize: '200% 100%' }}></div>
+              <div className="relative rounded-2xl p-6 md:p-8 border border-white/10 bg-gradient-to-br from-slate-900 via-slate-800 to-clinical-950 shadow-mrx-lg overflow-hidden min-h-[340px] animate-in zoom-in-95 duration-700 delay-150">
+                <div
+                  className="absolute inset-x-0 h-[2px] top-0 animate-scanner z-20"
+                  style={{ backgroundColor: scanColors[scanColorIdx], boxShadow: `0 0 24px ${scanColors[scanColorIdx]}` }}
+                />
+                <div className="absolute inset-0 opacity-20 pointer-events-none">
+                  <div className="absolute top-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-clinical-400 to-transparent animate-running-track" />
+                  <div className="absolute top-2/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-emerald-400 to-transparent animate-running-track [animation-delay:0.6s]" />
                 </div>
 
-                {/* VERTICAL SCANNERS (Shifting Colors) */}
-                <div className="absolute inset-x-0 h-[3px] top-0 animate-scanner z-20 overflow-hidden" style={{ transition: 'background-color 1s' }}>
-                  <div className="absolute inset-0 animate-color-shift bg-current shadow-[0_0_25px_currentColor]" style={{ color: scanColors[scanColorIdx], backgroundColor: 'currentColor' }}></div>
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent animate-shimmer" style={{ width: '200%' }}></div>
-                </div>
-                
-                <div className="space-y-10 relative z-30">
-                  <div className="flex items-center gap-4 bg-white/5 p-6 rounded-3xl border border-white/10 relative overflow-hidden backdrop-blur-sm group">
-                    <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <div className="w-12 h-12 bg-blue-600/20 rounded-2xl flex items-center justify-center text-3xl animate-pulse shadow-[0_0_20px_rgba(37,99,235,0.2)]">💊</div>
-                    <div className="space-y-2 flex-1">
-                      <div className="flex justify-between items-end">
-                        <span className="text-[9px] font-black text-blue-500 uppercase tracking-[0.2em] animate-pulse">Bio-Scan: {activeScanName}</span>
-                        <div className="flex gap-1">
-                           <div className="w-1 h-1 bg-blue-500 animate-ping"></div>
-                           <span className="text-[7px] font-black text-white/30 uppercase">Live</span>
-                        </div>
+                <div className="space-y-6 relative z-10">
+                  <div className="flex items-center gap-4 bg-white/5 p-5 rounded-2xl border border-white/10 backdrop-blur-sm">
+                    <div className="w-12 h-12 bg-clinical-600/30 rounded-xl flex items-center justify-center text-2xl">💊</div>
+                    <div className="flex-1 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-bold text-clinical-400 uppercase tracking-widest">
+                          {t('auth.scanBio')}: {activeScanName}
+                        </span>
+                        <span className="text-[9px] font-bold text-emerald-400 uppercase">{t('auth.scanLive')}</span>
                       </div>
-                      <div className="h-1 bg-white/10 rounded-full w-full overflow-hidden relative">
-                         <div className="absolute inset-0 bg-blue-500 animate-shimmer"></div>
+                      <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <div className="h-full w-2/3 bg-clinical-500 rounded-full animate-shimmer" />
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="p-5 bg-white/5 border border-white/10 rounded-3xl flex justify-between items-center group relative overflow-hidden">
-                    <div className="absolute inset-x-0 h-[0.5px] bg-blue-500/20 bottom-0 animate-shimmer"></div>
-                    <div className="space-y-0.5">
-                      <span className="text-[7px] font-black text-slate-600 uppercase tracking-widest">Molecular ID</span>
-                      <h4 className="text-lg font-black text-white tracking-widest uppercase italic group-hover:text-blue-400 transition-colors duration-500">{activeScanName}</h4>
-                    </div>
+
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
+                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{t('auth.molecularId')}</span>
+                    <p className="text-lg font-bold text-white mt-1">{activeScanName}</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="h-16 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 flex flex-col items-center justify-center space-y-0.5 relative overflow-hidden group">
-                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-500/10 to-transparent animate-shimmer group-hover:duration-500"></div>
-                       <span className="text-emerald-500 font-black text-[8px] uppercase tracking-widest">Stability</span>
-                       <span className="text-white font-black text-[10px] uppercase">Optimal</span>
+                    <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-center">
+                      <span className="text-[9px] font-bold text-emerald-400 uppercase">{t('auth.stability')}</span>
+                      <p className="text-sm font-bold text-white mt-1">{t('auth.stabilityOptimal')}</p>
                     </div>
-                    <div className="h-16 bg-blue-500/10 rounded-2xl border border-blue-500/20 flex flex-col items-center justify-center space-y-0.5 relative overflow-hidden group">
-                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/10 to-transparent animate-shimmer [animation-delay:0.7s]"></div>
-                       <span className="text-blue-500 font-black text-[8px] uppercase tracking-widest">Interactions</span>
-                       <span className="text-white font-black text-[10px] uppercase">Checked</span>
+                    <div className="p-4 rounded-2xl bg-clinical-500/10 border border-clinical-500/25 text-center">
+                      <span className="text-[9px] font-bold text-clinical-400 uppercase">{t('nav.interactions')}</span>
+                      <p className="text-sm font-bold text-white mt-1">{t('auth.interactionsChecked')}</p>
                     </div>
                   </div>
                 </div>
@@ -183,112 +254,138 @@ const Auth: React.FC<AuthProps> = ({ onLogin, theme, toggleTheme }) => {
             </div>
           </div>
         ) : (
-          /* LOGIN / REGISTER FORM */
-          <div className="max-w-md w-full relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-500 py-10">
-            <div className="bg-white dark:bg-slate-900 rounded-[3.5rem] p-10 md:p-12 shadow-3xl border border-slate-100 dark:border-white/5 space-y-8">
-              <div className="text-center space-y-2">
-                <h2 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic leading-none">
-                  {isRegistering ? 'Create Account' : 'Welcome Back'}
-                </h2>
-                <div className="h-1 w-8 bg-blue-600 mx-auto rounded-full mt-2"></div>
+          <div className="max-w-md w-full py-8 animate-in fade-in slide-in-from-bottom-6 duration-400">
+            <div className="relative mrx-card dark:bg-mrx-panel-dark rounded-3xl p-8 md:p-10 shadow-mrx-xl border border-mrx-line dark:border-mrx-line-dark space-y-7 overflow-hidden">
+              <div className="absolute -top-20 -right-20 w-40 h-40 bg-clinical-500/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute -bottom-16 -left-16 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+              <div className="relative flex flex-col items-center gap-4">
+                <MrxLogo size="md" showText={false} />
+                <div className="text-center space-y-1">
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-zinc-50">
+                    {isRegistering ? t('auth.createAccount') : t('auth.welcomeBack')}
+                  </h2>
+                  <p className="text-sm text-gray-500 dark:text-zinc-400">{t('auth.secureLogin')}</p>
+                </div>
               </div>
 
-              <div className="space-y-4">
-                <button 
-                  onClick={handleGoogleLogin}
-                  className="w-full bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-100 transition-all flex items-center justify-center gap-3"
-                >
-                  <svg width="18" height="18" viewBox="0 0 48 48">
-                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.13-.45-4.63H24v9.3h12.98c-.58 2.85-2.18 5.25-4.59 6.81l7.41 5.76c4.34-4.01 6.88-9.92 6.88-17.24z"/>
-                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24s.92 7.54 2.56 10.78l7.97-6.19z"/>
-                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.41-5.76c-2.11 1.41-4.81 2.24-8.48 2.24-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-                  </svg>
-                  Google Login
-                </button>
-                
-                <div className="relative flex items-center py-2">
-                   <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
-                   <span className="flex-shrink mx-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Or Email</span>
-                   <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+              {authError && (
+                <div className="p-4 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-2xl text-rose-600 dark:text-rose-400 text-sm font-medium text-center">
+                  {authError}
                 </div>
+              )}
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <input 
-                    type="email" 
-                    placeholder="Email address"
+              {(googleConfigured && import.meta.env.VITE_GOOGLE_CLIENT_ID) ? (
+                <div className="space-y-3">
+                  <div ref={googleBtnRef} className="flex justify-center min-h-[44px]" />
+                  <div className="relative flex items-center py-1">
+                    <div className="flex-grow border-t border-mrx-line dark:border-mrx-line-dark" />
+                    <span className="mx-4 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                      {t('auth.orContinue')}
+                    </span>
+                    <div className="flex-grow border-t border-mrx-line dark:border-mrx-line-dark" />
+                  </div>
+                </div>
+              ) : googleConfigured ? null : (
+                <p className="text-[11px] text-center text-gray-400 dark:text-zinc-500">{t('auth.googleUnavailable')}</p>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="mrx-label">{t('auth.email')}</label>
+                  <input
+                    type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-5 font-bold outline-none focus:ring-4 ring-blue-500/10 transition-all dark:text-white"
+                    placeholder={t('auth.email')}
+                    autoComplete="email"
+                    className="mrx-input"
                   />
-                  <input 
-                    type="password" 
-                    placeholder="Password"
+                </div>
+                <div>
+                  <label className="mrx-label">{t('auth.password')}</label>
+                  <PasswordField
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-5 font-bold outline-none focus:ring-4 ring-blue-500/10 transition-all dark:text-white"
+                    onChange={setPassword}
+                    autoComplete={isRegistering ? 'new-password' : 'current-password'}
                   />
-                  <button 
-                    type="submit"
-                    className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-[0.3em] shadow-lg hover:bg-blue-700 transition-all active:scale-95"
-                  >
-                    {isRegistering ? 'Sign Up' : 'Log In'}
-                  </button>
-                </form>
-              </div>
+                </div>
+                <button type="submit" disabled={isSubmitting} className="w-full mrx-btn-primary py-4 disabled:opacity-50">
+                  {isSubmitting
+                    ? t('auth.authenticating')
+                    : isRegistering
+                      ? t('auth.signUp')
+                      : t('auth.logIn')}
+                </button>
+              </form>
 
-              <button 
+              <button
+                type="button"
                 onClick={() => setIsRegistering(!isRegistering)}
-                className="w-full text-center text-[10px] font-black text-slate-400 hover:text-blue-600 transition-colors uppercase tracking-[0.2em]"
+                className="w-full text-center text-sm font-medium text-gray-500 dark:text-zinc-400 hover:text-clinical-600 transition-colors"
               >
-                {isRegistering ? 'Already have an account? Log In' : 'New here? Create a profile'}
+                {isRegistering ? t('auth.switchToLogin') : t('auth.switchToRegister')}
               </button>
             </div>
           </div>
         )}
       </main>
 
-      {/* Mandatory Medical Observation Disclaimer */}
-      <div className="w-full text-center py-8 px-6 no-print">
-        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 dark:text-slate-600 italic">
-          No medical advice. Just what’s happening.
-        </p>
+      <div className="w-full text-center py-6 px-6 no-print">
+        <p className="text-xs text-gray-400 dark:text-zinc-500">{t('common.disclaimer')}</p>
       </div>
 
-      <Footer onOpenLegal={openLegal} onOpenFAQ={openFAQ} />
+      <Footer
+        onOpenLegal={openLegal}
+        onOpenFAQ={() => setShowFAQModal(true)}
+        onLanguageChange={handleLocaleChange}
+        theme={theme}
+        toggleTheme={toggleTheme}
+      />
 
-      {/* MODALS RENDERED HERE FOR AUTH CONTEXT */}
       {showLegalModal && (
-        <div className="fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-4 animate-in fade-in duration-300">
-           <div className="bg-white dark:bg-slate-900 w-full max-w-5xl max-h-[90vh] rounded-[4rem] shadow-2xl flex flex-col overflow-hidden border border-white/10">
-              <div className="p-8 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-slate-50 dark:bg-white/5">
-                 <div className="flex items-center gap-4">
-                    <span className="text-3xl">⚖️</span>
-                    <h3 className="text-xl font-black uppercase tracking-tighter italic dark:text-white">Knowledge Hub</h3>
-                 </div>
-                 <button onClick={() => setShowLegalModal(false)} className="w-10 h-10 rounded-full bg-slate-200 dark:bg-white/10 flex items-center justify-center text-xl hover:bg-rose-500 hover:text-white transition-all">✕</button>
+        <div className="fixed inset-0 z-[600] bg-black/55 backdrop-blur-xl flex items-center justify-center p-4">
+          <div className="bg-mrx-panel dark:bg-mrx-panel-dark w-full max-w-5xl max-h-[90vh] rounded-3xl shadow-mrx-xl flex flex-col overflow-hidden border border-mrx-line dark:border-mrx-line-dark">
+            <div className="p-6 border-b border-mrx-line dark:border-mrx-line-dark flex justify-between items-center bg-mrx-inset dark:bg-mrx-inset-dark">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">⚖️</span>
+                <h3 className="text-lg font-bold dark:text-white">{t('auth.knowledgeHub')}</h3>
               </div>
-              <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
-                 <Legal initialSection={initialLegalSection} />
-              </div>
-           </div>
+              <button
+                type="button"
+                onClick={() => setShowLegalModal(false)}
+                className="w-10 h-10 rounded-xl bg-mrx-inset dark:bg-white/10 hover:bg-rose-500 hover:text-white transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+              <Legal initialSection={initialLegalSection} />
+            </div>
+          </div>
         </div>
       )}
 
       {showFAQModal && (
-        <div className="fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-4 animate-in fade-in duration-300">
-           <div className="bg-white dark:bg-slate-900 w-full max-w-5xl max-h-[90vh] rounded-[4rem] shadow-2xl flex flex-col overflow-hidden border border-white/10">
-              <div className="p-8 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-slate-50 dark:bg-white/5">
-                 <div className="flex items-center gap-4">
-                    <span className="text-3xl">❓</span>
-                    <h3 className="text-xl font-black uppercase tracking-tighter italic dark:text-white">Common Questions</h3>
-                 </div>
-                 <button onClick={() => setShowFAQModal(false)} className="w-10 h-10 rounded-full bg-slate-200 dark:bg-white/10 flex items-center justify-center text-xl hover:bg-rose-500 hover:text-white transition-all">✕</button>
+        <div className="fixed inset-0 z-[600] bg-black/55 backdrop-blur-xl flex items-center justify-center p-4">
+          <div className="bg-mrx-panel dark:bg-mrx-panel-dark w-full max-w-5xl max-h-[90vh] rounded-3xl shadow-mrx-xl flex flex-col overflow-hidden border border-mrx-line dark:border-mrx-line-dark">
+            <div className="p-6 border-b border-mrx-line dark:border-mrx-line-dark flex justify-between items-center bg-mrx-inset dark:bg-mrx-inset-dark">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">❓</span>
+                <h3 className="text-lg font-bold dark:text-white">{t('auth.commonQuestions')}</h3>
               </div>
-              <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
-                 <FAQ />
-              </div>
-           </div>
+              <button
+                type="button"
+                onClick={() => setShowFAQModal(false)}
+                className="w-10 h-10 rounded-xl bg-mrx-inset dark:bg-white/10 hover:bg-rose-500 hover:text-white transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+              <FAQ />
+            </div>
+          </div>
         </div>
       )}
     </div>

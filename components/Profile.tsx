@@ -1,6 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { UserProfile } from '../types';
-import SectionHero from './SectionHero';
+import { parseAge } from '../utils/profileValidation';
+import PageShell from './PageShell';
+import PageCard, { PageSectionTitle } from './PageCard';
+import ClinicalProfileSection from './ClinicalProfileSection';
+import { useI18n } from '../i18n/I18nContext';
 
 interface ProfileProps {
   profile: UserProfile;
@@ -20,6 +24,7 @@ const COMMON_ALLERGIES = [
 ];
 
 const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
+  const { t } = useI18n();
   const [newCondition, setNewCondition] = useState('');
   const [newAllergy, setNewAllergy] = useState('');
 
@@ -96,135 +101,123 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-12 animate-slide-up pb-32">
-      <SectionHero 
-        title="Bio-Profile" 
-        subtitle="Physiological Baseline" 
-        icon="🧬" 
-        color="#10b981" 
-      />
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Basic Biometrics */}
-        <div className="lg:col-span-5 bg-slate-50 dark:bg-slate-900/50 p-10 rounded-[3.5rem] border border-slate-200 dark:border-white/5 space-y-8 shadow-xl h-fit">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-clinical-500/10 rounded-2xl flex items-center justify-center text-2xl">🧬</div>
-              <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">Biometrics</h3>
+    <PageShell tabId="profile" narrow>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+        <PageCard className="lg:col-span-5 h-fit" padding="sm">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 bg-clinical-500/10 rounded-2xl flex items-center justify-center text-xl">🧬</div>
+              <PageSectionTitle>{t('profile.biometrics')}</PageSectionTitle>
             </div>
-            
-            <div className="flex p-1 bg-slate-200/50 dark:bg-white/5 rounded-xl border border-slate-300/50 dark:border-white/10">
+            <div className="flex p-1 bg-mrx-inset dark:bg-mrx-inset-dark rounded-xl border border-mrx-line dark:border-mrx-line-dark">
               <button 
                 onClick={() => setProfile({ ...profile, preferred_units: 'METRIC' })}
-                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${profile.preferred_units === 'METRIC' ? 'bg-white dark:bg-slate-800 text-clinical-600 shadow-sm' : 'text-slate-500'}`}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${profile.preferred_units === 'METRIC' ? 'bg-mrx-panel dark:bg-mrx-panel-dark text-clinical-600 shadow-mrx-sm' : 'text-gray-500'}`}
               >
-                Metric
+                {t('profile.metric')}
               </button>
               <button 
                 onClick={() => setProfile({ ...profile, preferred_units: 'IMPERIAL' })}
-                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${profile.preferred_units === 'IMPERIAL' ? 'bg-white dark:bg-slate-800 text-clinical-600 shadow-sm' : 'text-slate-500'}`}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${profile.preferred_units === 'IMPERIAL' ? 'bg-mrx-panel dark:bg-mrx-panel-dark text-clinical-600 shadow-mrx-sm' : 'text-gray-500'}`}
               >
-                Imperial
+                {t('profile.imperial')}
               </button>
             </div>
           </div>
           
           <div className="space-y-6">
             <div className="space-y-2">
-              <label className="text-[9px] font-black uppercase text-slate-500 tracking-widest ml-4">Legal Name / Alias</label>
-              <input 
-                type="text" 
-                value={profile.name || ''} 
-                onChange={e => setProfile({...profile, name: e.target.value})}
-                placeholder="How should Dr. BioMath address you?"
-                className="w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-4 font-bold text-sm outline-none focus:border-clinical-500 transition-all dark:text-white"
+              <label className="mrx-label">{t('profile.name')}</label>
+              <input
+                type="text"
+                value={profile.name || ''}
+                onChange={e => setProfile({ ...profile, name: e.target.value })}
+                placeholder={t('profile.namePh')}
+                className="mrx-input"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
-               <div className="space-y-2">
-                 <label className="text-[9px] font-black uppercase text-slate-500 tracking-widest ml-4">Age (Years)</label>
-                 <input 
-                   type="number" 
-                   value={profile.age_years || ''} 
-                   onChange={e => setProfile({...profile, age_years: parseInt(e.target.value) || 0})}
-                   className="w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-4 font-bold text-sm outline-none focus:border-clinical-500 transition-all dark:text-white"
-                 />
-               </div>
-               <div className="space-y-2">
-                 <label className="text-[9px] font-black uppercase text-slate-500 tracking-widest ml-4">Sex</label>
-                 <select 
-                   value={profile.sex_at_birth || 'UNKNOWN'} 
-                   onChange={e => setProfile({...profile, sex_at_birth: e.target.value as any})}
-                   className="w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-4 font-bold text-sm outline-none dark:text-white"
-                 >
-                   <option value="MALE">Male</option>
-                   <option value="FEMALE">Female</option>
-                   <option value="UNKNOWN">Other</option>
-                 </select>
-               </div>
+              <div className="space-y-2">
+                <label className="mrx-label">{t('profile.age')}</label>
+                <input
+                  type="number"
+                  value={profile.age_years ?? ''}
+                  onChange={(e) => setProfile({ ...profile, age_years: parseAge(e.target.value) })}
+                  className="mrx-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="mrx-label">{t('profile.sex')}</label>
+                <select
+                  value={profile.sex_at_birth || 'UNKNOWN'}
+                  onChange={e => setProfile({ ...profile, sex_at_birth: e.target.value as any })}
+                  className="mrx-input"
+                >
+                  <option value="MALE">{t('profile.sexMale')}</option>
+                  <option value="FEMALE">{t('profile.sexFemale')}</option>
+                  <option value="UNKNOWN">{t('profile.sexUnknown')}</option>
+                </select>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-               <div className="space-y-2">
-                 <label className="text-[9px] font-black uppercase text-slate-500 tracking-widest ml-4">
-                   Weight ({profile.preferred_units === 'METRIC' ? 'KG' : 'LBS'})
-                 </label>
-                 <input 
-                   type="number" 
-                   value={displayWeight} 
-                   onChange={e => handleWeightChange(e.target.value)}
-                   className="w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-4 font-bold text-sm outline-none focus:border-clinical-500 transition-all dark:text-white"
-                 />
-               </div>
-               <div className="space-y-2">
-                 <label className="text-[9px] font-black uppercase text-slate-500 tracking-widest ml-4">
-                   Height ({profile.preferred_units === 'METRIC' ? 'CM' : 'IN'})
-                 </label>
-                 <input 
-                   type="number" 
-                   value={displayHeight} 
-                   onChange={e => handleHeightChange(e.target.value)}
-                   className="w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-4 font-bold text-sm outline-none focus:border-clinical-500 transition-all dark:text-white"
-                 />
-               </div>
+              <div className="space-y-2">
+                <label className="mrx-label">
+                  {t('profile.weight')} ({profile.preferred_units === 'METRIC' ? 'kg' : 'lbs'})
+                </label>
+                <input
+                  type="number"
+                  value={displayWeight}
+                  onChange={e => handleWeightChange(e.target.value)}
+                  className="mrx-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="mrx-label">
+                  {t('profile.height')} ({profile.preferred_units === 'METRIC' ? 'cm' : 'in'})
+                </label>
+                <input
+                  type="number"
+                  value={displayHeight}
+                  onChange={e => handleHeightChange(e.target.value)}
+                  className="mrx-input"
+                />
+              </div>
             </div>
           </div>
-        </div>
+        </PageCard>
 
-        {/* Right Column: Medical History */}
-        <div className="lg:col-span-7 bg-slate-50 dark:bg-slate-900/50 p-10 rounded-[3.5rem] border border-slate-200 dark:border-white/5 space-y-12 shadow-xl">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-clinical-500/10 rounded-2xl flex items-center justify-center text-2xl">📋</div>
-            <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">Medical History</h3>
+        <PageCard className="lg:col-span-7 space-y-6" padding="sm">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 bg-clinical-500/10 rounded-2xl flex items-center justify-center text-xl">📋</div>
+            <PageSectionTitle>{t('profile.medHistory')}</PageSectionTitle>
           </div>
-          
-          <div className="space-y-12">
-            {/* PRE-EXISTING CONDITIONS SECTION */}
-            <div className="space-y-6">
-              <div className="flex justify-between items-end px-4">
-                <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Pre-existing Conditions</label>
-                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Manual or Quick Select</span>
+
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <div className="flex justify-between items-end">
+                <label className="mrx-label mb-0">{t('profile.conditions')}</label>
+                <span className="text-xs text-gray-400">{t('profile.conditionsHint')}</span>
               </div>
-              
+
               <div className="flex gap-3">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={newCondition}
                   onChange={e => setNewCondition(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && addCondition(newCondition)}
-                  placeholder="Type rare condition..."
-                  className="flex-1 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl px-6 py-4 font-bold text-sm outline-none focus:border-clinical-500 transition-all dark:text-white shadow-inner"
+                  placeholder={t('profile.conditionPh')}
+                  className="mrx-input flex-1"
                 />
-                <button 
-                  onClick={() => addCondition(newCondition)} 
-                  className="w-14 h-14 bg-clinical-600 text-white rounded-2xl font-black text-2xl shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center"
+                <button
+                  onClick={() => addCondition(newCondition)}
+                  className="w-12 h-12 shrink-0 bg-clinical-600 text-white rounded-2xl font-bold text-xl shadow-mrx-sm hover:scale-105 active:scale-95 transition-all"
                 >
                   +
                 </button>
               </div>
 
-              {/* Quick Select Conditions */}
-              <div className="space-y-3">
-                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-4">Common Bases:</p>
+              <div className="space-y-2">
+                <p className="text-xs text-gray-400">{t('profile.common')}:</p>
                 <div className="flex flex-wrap gap-2">
                   {COMMON_CONDITIONS.map(c => {
                     const isSelected = profile.preexisting_conditions.includes(c);
@@ -232,10 +225,10 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
                       <button
                         key={c}
                         onClick={() => isSelected ? removeCondition(profile.preexisting_conditions.indexOf(c)) : addCondition(c)}
-                        className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${
-                          isSelected 
-                            ? 'bg-clinical-600 border-clinical-600 text-white shadow-lg' 
-                            : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 hover:border-clinical-400'
+                        className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all border ${
+                          isSelected
+                            ? 'bg-clinical-600 border-clinical-600 text-white'
+                            : 'bg-mrx-inset dark:bg-mrx-inset-dark border-mrx-line dark:border-mrx-line-dark text-gray-500 hover:border-clinical-400'
                         }`}
                       >
                         {c}
@@ -245,44 +238,41 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
                 </div>
               </div>
 
-              {/* Active Conditions Display */}
-              <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100 dark:border-white/5 mt-4">
+              <div className="flex flex-wrap gap-2 pt-4 border-t border-mrx-line dark:border-mrx-line-dark">
                 {profile.preexisting_conditions.map((c, i) => (
-                  <span key={i} className="px-4 py-2 bg-clinical-500/10 text-clinical-600 dark:bg-clinical-500/20 dark:text-clinical-400 rounded-full text-[10px] font-black uppercase flex items-center gap-2 border border-clinical-500/10 animate-in zoom-in-95">
+                  <span key={i} className="px-3 py-1.5 bg-clinical-500/10 text-clinical-600 dark:text-clinical-400 rounded-full text-xs font-semibold flex items-center gap-2 border border-clinical-500/10">
                     {c}
-                    <button onClick={() => removeCondition(i)} className="w-5 h-5 rounded-full hover:bg-clinical-500 hover:text-white flex items-center justify-center transition-colors">×</button>
+                    <button onClick={() => removeCondition(i)} className="hover:text-clinical-800">×</button>
                   </span>
                 ))}
               </div>
             </div>
 
-            {/* KNOWN ALLERGIES SECTION */}
-            <div className="space-y-6">
-              <div className="flex justify-between items-end px-4">
-                <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Known Allergies</label>
-                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Critical Safety Data</span>
+            <div className="space-y-4">
+              <div className="flex justify-between items-end">
+                <label className="mrx-label mb-0">{t('profile.allergies')}</label>
+                <span className="text-xs text-gray-400">{t('profile.allergiesHint')}</span>
               </div>
 
               <div className="flex gap-3">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={newAllergy}
                   onChange={e => setNewAllergy(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && addAllergy(newAllergy)}
-                  placeholder="Type rare allergy..."
-                  className="flex-1 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl px-6 py-4 font-bold text-sm outline-none focus:border-clinical-500 transition-all dark:text-white shadow-inner"
+                  placeholder={t('profile.allergyPh')}
+                  className="mrx-input flex-1"
                 />
-                <button 
-                  onClick={() => addAllergy(newAllergy)} 
-                  className="w-14 h-14 bg-rose-500 text-white rounded-2xl font-black text-2xl shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center"
+                <button
+                  onClick={() => addAllergy(newAllergy)}
+                  className="w-12 h-12 shrink-0 bg-rose-500 text-white rounded-2xl font-bold text-xl shadow-mrx-sm hover:scale-105 active:scale-95 transition-all"
                 >
                   +
                 </button>
               </div>
 
-              {/* Quick Select Allergies */}
-              <div className="space-y-3">
-                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-4">Common Triggers:</p>
+              <div className="space-y-2">
+                <p className="text-xs text-gray-400">{t('profile.triggers')}:</p>
                 <div className="flex flex-wrap gap-2">
                   {COMMON_ALLERGIES.map(a => {
                     const isSelected = profile.known_allergies.includes(a);
@@ -290,10 +280,10 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
                       <button
                         key={a}
                         onClick={() => isSelected ? removeAllergy(profile.known_allergies.indexOf(a)) : addAllergy(a)}
-                        className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${
-                          isSelected 
-                            ? 'bg-rose-600 border-rose-600 text-white shadow-lg' 
-                            : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 hover:border-rose-400'
+                        className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all border ${
+                          isSelected
+                            ? 'bg-rose-600 border-rose-600 text-white'
+                            : 'bg-mrx-inset dark:bg-mrx-inset-dark border-mrx-line dark:border-mrx-line-dark text-gray-500 hover:border-rose-400'
                         }`}
                       >
                         {a}
@@ -303,20 +293,21 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
                 </div>
               </div>
 
-              {/* Active Allergies Display */}
-              <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100 dark:border-white/5 mt-4">
+              <div className="flex flex-wrap gap-2 pt-4 border-t border-mrx-line dark:border-mrx-line-dark">
                 {profile.known_allergies.map((a, i) => (
-                  <span key={i} className="px-4 py-2 bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 rounded-full text-[10px] font-black uppercase flex items-center gap-2 border border-rose-500/10 animate-in zoom-in-95">
+                  <span key={i} className="px-3 py-1.5 bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-full text-xs font-semibold flex items-center gap-2 border border-rose-500/10">
                     {a}
-                    <button onClick={() => removeAllergy(i)} className="w-5 h-5 rounded-full hover:bg-rose-500 hover:text-white flex items-center justify-center transition-colors">×</button>
+                    <button onClick={() => removeAllergy(i)} className="hover:text-rose-800">×</button>
                   </span>
                 ))}
               </div>
             </div>
+
+            <ClinicalProfileSection profile={profile} setProfile={setProfile} />
           </div>
-        </div>
+        </PageCard>
       </div>
-    </div>
+    </PageShell>
   );
 };
 

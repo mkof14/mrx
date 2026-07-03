@@ -1,0 +1,400 @@
+import type { Locale } from './languages';
+
+export type AuthTranslationKey =
+  | 'auth.heroTitle1'
+  | 'auth.heroTitle2'
+  | 'auth.heroSubtitle'
+  | 'auth.startTracking'
+  | 'auth.logIn'
+  | 'auth.close'
+  | 'auth.welcomeBack'
+  | 'auth.createAccount'
+  | 'auth.secureLogin'
+  | 'auth.email'
+  | 'auth.password'
+  | 'auth.showPassword'
+  | 'auth.hidePassword'
+  | 'auth.signUp'
+  | 'auth.authenticating'
+  | 'auth.switchToLogin'
+  | 'auth.switchToRegister'
+  | 'auth.orContinue'
+  | 'auth.google'
+  | 'auth.googleUnavailable'
+  | 'auth.knowledgeHub'
+  | 'auth.commonQuestions'
+  | 'auth.scanLive'
+  | 'auth.scanBio'
+  | 'auth.stability'
+  | 'auth.stabilityOptimal'
+  | 'auth.interactionsChecked'
+  | 'auth.molecularId'
+  | 'common.theme'
+  | 'common.themeLight'
+  | 'common.themeDark'
+  | 'voice.authRequired'
+  | 'voice.subscriptionRequired'
+  | 'voice.lockedSubtitle'
+  | 'voice.subscriptionSubtitle';
+
+export const authStrings: Record<Locale, Record<AuthTranslationKey, string>> = {
+  en: {
+    'auth.heroTitle1': 'Your medications.',
+    'auth.heroTitle2': 'Clear and personal.',
+    'auth.heroSubtitle':
+      'Add what you take. See interactions, side effects, and how you feel — all in one place.',
+    'auth.startTracking': 'Get started',
+    'auth.logIn': 'Log in',
+    'auth.close': 'Close',
+    'auth.welcomeBack': 'Welcome back',
+    'auth.createAccount': 'Create account',
+    'auth.secureLogin': 'Secure sign-in',
+    'auth.email': 'Email address',
+    'auth.password': 'Password',
+    'auth.showPassword': 'Show password',
+    'auth.hidePassword': 'Hide password',
+    'auth.signUp': 'Sign up',
+    'auth.authenticating': 'Signing in…',
+    'auth.switchToLogin': 'Already have an account? Log in',
+    'auth.switchToRegister': 'New here? Create a profile',
+    'auth.orContinue': 'Or continue with',
+    'auth.google': 'Continue with Google',
+    'auth.googleUnavailable': 'Google sign-in is not configured on this server.',
+    'auth.knowledgeHub': 'About MRX',
+    'auth.commonQuestions': 'How it works',
+    'auth.scanLive': 'Checking',
+    'auth.scanBio': 'Drug',
+    'auth.stability': 'Safety',
+    'auth.stabilityOptimal': 'OK',
+    'auth.interactionsChecked': 'Checked',
+    'auth.molecularId': 'Found',
+    'common.theme': 'Theme',
+    'common.themeLight': 'Switch to light theme',
+    'common.themeDark': 'Switch to dark theme',
+    'voice.authRequired':
+      'Welcome to MRX Voice. To access medication analysis, interactions, and personalized guidance, please sign in or create a free account.',
+    'voice.subscriptionRequired':
+      'You are signed in. Activate your subscription to unlock the full MRX Voice assistant with your medication data.',
+    'voice.lockedSubtitle': 'Sign in required',
+    'voice.subscriptionSubtitle': 'Subscription required'
+  },
+  es: {
+    'auth.heroTitle1': 'Sus medicamentos.',
+    'auth.heroTitle2': 'Claros y personales.',
+    'auth.heroSubtitle':
+      'Añada lo que toma. Vea interacciones, efectos secundarios y cómo se siente — todo en un solo lugar.',
+    'auth.startTracking': 'Empezar',
+    'auth.logIn': 'Iniciar sesión',
+    'auth.close': 'Cerrar',
+    'auth.welcomeBack': 'Bienvenido de nuevo',
+    'auth.createAccount': 'Crear cuenta',
+    'auth.secureLogin': 'Acceso seguro',
+    'auth.email': 'Correo electrónico',
+    'auth.password': 'Contraseña',
+    'auth.showPassword': 'Mostrar contraseña',
+    'auth.hidePassword': 'Ocultar contraseña',
+    'auth.signUp': 'Registrarse',
+    'auth.authenticating': 'Iniciando sesión…',
+    'auth.switchToLogin': '¿Ya tienes cuenta? Inicia sesión',
+    'auth.switchToRegister': '¿Nuevo? Crea un perfil',
+    'auth.orContinue': 'O continúa con',
+    'auth.google': 'Continuar con Google',
+    'auth.googleUnavailable': 'Inicio con Google no configurado en este servidor.',
+    'auth.knowledgeHub': 'Sobre MRX',
+    'auth.commonQuestions': 'Cómo funciona',
+    'auth.scanLive': 'Comprobando',
+    'auth.scanBio': 'Medicamento',
+    'auth.stability': 'Seguridad',
+    'auth.stabilityOptimal': 'OK',
+    'auth.interactionsChecked': 'Comprobado',
+    'auth.molecularId': 'Encontrado',
+    'common.theme': 'Tema',
+    'common.themeLight': 'Modo claro',
+    'common.themeDark': 'Modo oscuro',
+    'voice.authRequired':
+      'Bienvenido a MRX Voz. Para análisis de medicamentos, interacciones y orientación personalizada, inicia sesión o crea una cuenta.',
+    'voice.subscriptionRequired':
+      'Has iniciado sesión. Activa tu suscripción para desbloquear el asistente de voz MRX con tus datos.',
+    'voice.lockedSubtitle': 'Inicio de sesión requerido',
+    'voice.subscriptionSubtitle': 'Suscripción requerida'
+  },
+  de: {
+    'auth.heroTitle1': 'Ihre Medikamente.',
+    'auth.heroTitle2': 'Klar und persönlich.',
+    'auth.heroSubtitle':
+      'Erfassen Sie, was Sie einnehmen. Sehen Sie Wechselwirkungen, Nebenwirkungen und Ihr Befinden — alles an einem Ort.',
+    'auth.startTracking': 'Loslegen',
+    'auth.logIn': 'Anmelden',
+    'auth.close': 'Schließen',
+    'auth.welcomeBack': 'Willkommen zurück',
+    'auth.createAccount': 'Konto erstellen',
+    'auth.secureLogin': 'Sichere Anmeldung',
+    'auth.email': 'E-Mail-Adresse',
+    'auth.password': 'Passwort',
+    'auth.showPassword': 'Passwort anzeigen',
+    'auth.hidePassword': 'Passwort verbergen',
+    'auth.signUp': 'Registrieren',
+    'auth.authenticating': 'Anmeldung…',
+    'auth.switchToLogin': 'Schon ein Konto? Anmelden',
+    'auth.switchToRegister': 'Neu hier? Profil erstellen',
+    'auth.orContinue': 'Oder weiter mit',
+    'auth.google': 'Mit Google fortfahren',
+    'auth.googleUnavailable': 'Google-Anmeldung auf diesem Server nicht konfiguriert.',
+    'auth.knowledgeHub': 'Über MRX',
+    'auth.commonQuestions': 'So funktioniert\'s',
+    'auth.scanLive': 'Prüfung',
+    'auth.scanBio': 'Medikament',
+    'auth.stability': 'Sicherheit',
+    'auth.stabilityOptimal': 'OK',
+    'auth.interactionsChecked': 'Geprüft',
+    'auth.molecularId': 'Gefunden',
+    'common.theme': 'Design',
+    'common.themeLight': 'Helles Design',
+    'common.themeDark': 'Dunkles Design',
+    'voice.authRequired':
+      'Willkommen bei MRX Voice. Für Medikamentenanalyse, Wechselwirkungen und persönliche Beratung melden Sie sich an oder erstellen Sie ein Konto.',
+    'voice.subscriptionRequired':
+      'Sie sind angemeldet. Aktivieren Sie Ihr Abonnement, um den vollen MRX-Voice-Assistenten freizuschalten.',
+    'voice.lockedSubtitle': 'Anmeldung erforderlich',
+    'voice.subscriptionSubtitle': 'Abonnement erforderlich'
+  },
+  fr: {
+    'auth.heroTitle1': 'Vos médicaments.',
+    'auth.heroTitle2': 'Clairs et personnels.',
+    'auth.heroSubtitle':
+      'Ajoutez ce que vous prenez. Voyez les interactions, effets secondaires et votre ressenti — au même endroit.',
+    'auth.startTracking': 'Commencer',
+    'auth.logIn': 'Se connecter',
+    'auth.close': 'Fermer',
+    'auth.welcomeBack': 'Bon retour',
+    'auth.createAccount': 'Créer un compte',
+    'auth.secureLogin': 'Connexion sécurisée',
+    'auth.email': 'Adresse e-mail',
+    'auth.password': 'Mot de passe',
+    'auth.showPassword': 'Afficher le mot de passe',
+    'auth.hidePassword': 'Masquer le mot de passe',
+    'auth.signUp': "S'inscrire",
+    'auth.authenticating': 'Connexion…',
+    'auth.switchToLogin': 'Déjà un compte ? Connectez-vous',
+    'auth.switchToRegister': 'Nouveau ? Créez un profil',
+    'auth.orContinue': 'Ou continuer avec',
+    'auth.google': 'Continuer avec Google',
+    'auth.googleUnavailable': 'Connexion Google non configurée sur ce serveur.',
+    'auth.knowledgeHub': 'À propos de MRX',
+    'auth.commonQuestions': 'Comment ça marche',
+    'auth.scanLive': 'Vérification',
+    'auth.scanBio': 'Médicament',
+    'auth.stability': 'Sécurité',
+    'auth.stabilityOptimal': 'OK',
+    'auth.interactionsChecked': 'Vérifié',
+    'auth.molecularId': 'Trouvé',
+    'common.theme': 'Thème',
+    'common.themeLight': 'Thème clair',
+    'common.themeDark': 'Thème sombre',
+    'voice.authRequired':
+      'Bienvenue sur MRX Voice. Pour l\'analyse des médicaments, les interactions et des conseils personnalisés, connectez-vous ou créez un compte.',
+    'voice.subscriptionRequired':
+      'Vous êtes connecté. Activez votre abonnement pour débloquer l\'assistant vocal MRX complet.',
+    'voice.lockedSubtitle': 'Connexion requise',
+    'voice.subscriptionSubtitle': 'Abonnement requis'
+  },
+  zh: {
+    'auth.heroTitle1': '您的用药。',
+    'auth.heroTitle2': '清晰又贴心。',
+    'auth.heroSubtitle': '添加您正在服用的药物。在一个地方查看相互作用、副作用和您的感受。',
+    'auth.startTracking': '开始使用',
+    'auth.logIn': '登录',
+    'auth.close': '关闭',
+    'auth.welcomeBack': '欢迎回来',
+    'auth.createAccount': '创建账户',
+    'auth.secureLogin': '安全登录',
+    'auth.email': '电子邮箱',
+    'auth.password': '密码',
+    'auth.showPassword': '显示密码',
+    'auth.hidePassword': '隐藏密码',
+    'auth.signUp': '注册',
+    'auth.authenticating': '登录中…',
+    'auth.switchToLogin': '已有账户？登录',
+    'auth.switchToRegister': '新用户？创建档案',
+    'auth.orContinue': '或使用',
+    'auth.google': '使用 Google 继续',
+    'auth.googleUnavailable': '此服务器未配置 Google 登录。',
+    'auth.knowledgeHub': '关于 MRX',
+    'auth.commonQuestions': '如何使用',
+    'auth.scanLive': '检查中',
+    'auth.scanBio': '药品',
+    'auth.stability': '安全',
+    'auth.stabilityOptimal': '正常',
+    'auth.interactionsChecked': '已检查',
+    'auth.molecularId': '已找到',
+    'common.theme': '主题',
+    'common.themeLight': '浅色主题',
+    'common.themeDark': '深色主题',
+    'voice.authRequired':
+      '欢迎使用 MRX Voice。要使用药物分析、相互作用和个性化指导，请登录或创建免费账户。',
+    'voice.subscriptionRequired':
+      '您已登录。激活订阅以解锁包含您用药数据的完整 MRX 语音助手。',
+    'voice.lockedSubtitle': '需要登录',
+    'voice.subscriptionSubtitle': '需要订阅'
+  },
+  he: {
+    'auth.heroTitle1': 'התרופות שלכם.',
+    'auth.heroTitle2': 'ברור ואישי.',
+    'auth.heroSubtitle':
+      'הוסיפו מה שאתם לוקחים. ראו אינטראקציות, תופעות לוואי ואיך אתם מרגישים — במקום אחד.',
+    'auth.startTracking': 'התחילו',
+    'auth.logIn': 'התחברות',
+    'auth.close': 'סגור',
+    'auth.welcomeBack': 'ברוך שובך',
+    'auth.createAccount': 'יצירת חשבון',
+    'auth.secureLogin': 'כניסה מאובטחת',
+    'auth.email': 'כתובת אימייל',
+    'auth.password': 'סיסמה',
+    'auth.showPassword': 'הצג סיסמה',
+    'auth.hidePassword': 'הסתר סיסמה',
+    'auth.signUp': 'הרשמה',
+    'auth.authenticating': 'מתחבר…',
+    'auth.switchToLogin': 'יש לך חשבון? התחבר',
+    'auth.switchToRegister': 'חדש? צור פרופיל',
+    'auth.orContinue': 'או המשך עם',
+    'auth.google': 'המשך עם Google',
+    'auth.googleUnavailable': 'כניסה עם Google לא מוגדרת בשרת זה.',
+    'auth.knowledgeHub': 'אודות MRX',
+    'auth.commonQuestions': 'איך זה עובד',
+    'auth.scanLive': 'בודק',
+    'auth.scanBio': 'תרופה',
+    'auth.stability': 'בטיחות',
+    'auth.stabilityOptimal': 'תקין',
+    'auth.interactionsChecked': 'נבדק',
+    'auth.molecularId': 'נמצא',
+    'common.theme': 'ערכת נושא',
+    'common.themeLight': 'ערכת נושא בהירה',
+    'common.themeDark': 'ערכת נושא כהה',
+    'voice.authRequired':
+      'ברוכים הבאים ל-MRX Voice. לניתוח תרופות, אינטראקציות והדרכה אישית — התחברו או צרו חשבון.',
+    'voice.subscriptionRequired':
+      'אתם מחוברים. הפעילו מנוי כדי לפתוח את עוזר הקול המלא של MRX עם הנתונים שלכם.',
+    'voice.lockedSubtitle': 'נדרשת התחברות',
+    'voice.subscriptionSubtitle': 'נדרש מנוי'
+  },
+  ar: {
+    'auth.heroTitle1': 'أدويتك.',
+    'auth.heroTitle2': 'واضحة وشخصية.',
+    'auth.heroSubtitle':
+      'أضف ما تتناوله. شاهد التفاعلات والآثار الجانبية وشعورك — في مكان واحد.',
+    'auth.startTracking': 'ابدأ',
+    'auth.logIn': 'تسجيل الدخول',
+    'auth.close': 'إغلاق',
+    'auth.welcomeBack': 'مرحباً بعودتك',
+    'auth.createAccount': 'إنشاء حساب',
+    'auth.secureLogin': 'تسجيل دخول آمن',
+    'auth.email': 'البريد الإلكتروني',
+    'auth.password': 'كلمة المرور',
+    'auth.showPassword': 'إظهار كلمة المرور',
+    'auth.hidePassword': 'إخفاء كلمة المرور',
+    'auth.signUp': 'التسجيل',
+    'auth.authenticating': 'جارٍ تسجيل الدخول…',
+    'auth.switchToLogin': 'لديك حساب؟ سجّل الدخول',
+    'auth.switchToRegister': 'جديد؟ أنشئ ملفاً',
+    'auth.orContinue': 'أو تابع مع',
+    'auth.google': 'المتابعة مع Google',
+    'auth.googleUnavailable': 'تسجيل Google غير مُعدّ على هذا الخادم.',
+    'auth.knowledgeHub': 'عن MRX',
+    'auth.commonQuestions': 'كيف يعمل',
+    'auth.scanLive': 'جاري الفحص',
+    'auth.scanBio': 'دواء',
+    'auth.stability': 'السلامة',
+    'auth.stabilityOptimal': 'OK',
+    'auth.interactionsChecked': 'تم الفحص',
+    'auth.molecularId': 'تم العثور',
+    'common.theme': 'المظهر',
+    'common.themeLight': 'المظهر الفاتح',
+    'common.themeDark': 'المظهر الداكن',
+    'voice.authRequired':
+      'مرحباً بك في MRX Voice. للوصول إلى تحليل الأدوية والتفاعلات والإرشاد الشخصي، سجّل الدخول أو أنشئ حساباً.',
+    'voice.subscriptionRequired':
+      'أنت مسجّل الدخول. فعّل اشتراكك لفتح مساعد MRX الصوتي الكامل مع بياناتك.',
+    'voice.lockedSubtitle': 'يلزم تسجيل الدخول',
+    'voice.subscriptionSubtitle': 'يلزم الاشتراك'
+  },
+  uk: {
+    'auth.heroTitle1': 'Ваші ліки.',
+    'auth.heroTitle2': 'Зрозуміло та персонально.',
+    'auth.heroSubtitle':
+      'Додайте, що приймаєте. Дивіться взаємодії, побічні ефекти та самопочуття — в одному місці.',
+    'auth.startTracking': 'Почати',
+    'auth.logIn': 'Увійти',
+    'auth.close': 'Закрити',
+    'auth.welcomeBack': 'З поверненням',
+    'auth.createAccount': 'Створити акаунт',
+    'auth.secureLogin': 'Безпечний вхід',
+    'auth.email': 'Електронна пошта',
+    'auth.password': 'Пароль',
+    'auth.showPassword': 'Показати пароль',
+    'auth.hidePassword': 'Приховати пароль',
+    'auth.signUp': 'Зареєструватися',
+    'auth.authenticating': 'Вхід…',
+    'auth.switchToLogin': 'Вже є акаунт? Увійти',
+    'auth.switchToRegister': 'Новий користувач? Створіть профіль',
+    'auth.orContinue': 'Або продовжити з',
+    'auth.google': 'Продовжити з Google',
+    'auth.googleUnavailable': 'Вхід через Google не налаштовано на сервері.',
+    'auth.knowledgeHub': 'Про MRX',
+    'auth.commonQuestions': 'Як це працює',
+    'auth.scanLive': 'Перевірка',
+    'auth.scanBio': 'Препарат',
+    'auth.stability': 'Безпека',
+    'auth.stabilityOptimal': 'Ок',
+    'auth.interactionsChecked': 'Перевірено',
+    'auth.molecularId': 'Знайдено',
+    'common.theme': 'Тема',
+    'common.themeLight': 'Світла тема',
+    'common.themeDark': 'Темна тема',
+    'voice.authRequired':
+      'Ласкаво просимо до MRX Voice. Для аналізу ліків, взаємодій і персональних порад увійдіть або створіть обліковий запис.',
+    'voice.subscriptionRequired':
+      'Ви увійшли. Активуйте підписку, щоб відкрити повний голосовий помічник MRX з вашими даними.',
+    'voice.lockedSubtitle': 'Потрібна авторизація',
+    'voice.subscriptionSubtitle': 'Потрібна підписка'
+  },
+  ru: {
+    'auth.heroTitle1': 'Ваши лекарства.',
+    'auth.heroTitle2': 'Понятно и персонально.',
+    'auth.heroSubtitle':
+      'Добавьте, что принимаете. Смотрите взаимодействия, побочные эффекты и самочувствие — в одном месте.',
+    'auth.startTracking': 'Начать',
+    'auth.logIn': 'Войти',
+    'auth.close': 'Закрыть',
+    'auth.welcomeBack': 'С возвращением',
+    'auth.createAccount': 'Создать аккаунт',
+    'auth.secureLogin': 'Безопасный вход',
+    'auth.email': 'Электронная почта',
+    'auth.password': 'Пароль',
+    'auth.showPassword': 'Показать пароль',
+    'auth.hidePassword': 'Скрыть пароль',
+    'auth.signUp': 'Зарегистрироваться',
+    'auth.authenticating': 'Вход…',
+    'auth.switchToLogin': 'Уже есть аккаунт? Войти',
+    'auth.switchToRegister': 'Впервые? Создайте профиль',
+    'auth.orContinue': 'Или продолжить с',
+    'auth.google': 'Войти через Google',
+    'auth.googleUnavailable': 'Вход через Google не настроен на сервере.',
+    'auth.knowledgeHub': 'О сервисе',
+    'auth.commonQuestions': 'Как это работает',
+    'auth.scanLive': 'Проверка',
+    'auth.scanBio': 'Препарат',
+    'auth.stability': 'Безопасность',
+    'auth.stabilityOptimal': 'Ок',
+    'auth.interactionsChecked': 'Проверено',
+    'auth.molecularId': 'Найдено',
+    'common.theme': 'Тема',
+    'common.themeLight': 'Светлая тема',
+    'common.themeDark': 'Тёмная тема',
+    'voice.authRequired':
+      'Добро пожаловать в MRX Голос. Для анализа лекарств, взаимодействий и персональных рекомендаций войдите или создайте аккаунт.',
+    'voice.subscriptionRequired':
+      'Вы вошли в систему. Активируйте подписку, чтобы открыть полный MRX Голос с вашими данными.',
+    'voice.lockedSubtitle': 'Нужна авторизация',
+    'voice.subscriptionSubtitle': 'Нужна подписка'
+  }
+};

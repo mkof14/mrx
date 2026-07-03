@@ -1,224 +1,369 @@
 
 import React, { useState } from 'react';
 import { UserProfile } from '../types';
+import { parseAge, validateProfileBasics } from '../utils/profileValidation';
+import ClinicalProfileSection from './ClinicalProfileSection';
+import MrxLogo from './MrxLogo';
+import ThemeToggle from './ThemeToggle';
+import { useI18n } from '../i18n/I18nContext';
+import { api } from '../services/apiClient';
+
+const COMMON_ALLERGIES = ['Penicillin', 'Sulfa Drugs', 'Aspirin', 'NSAIDs', 'Codeine', 'Latex'];
 
 interface Props {
   onComplete: (profile: UserProfile) => void;
+  initialProfile: UserProfile;
   theme: 'light' | 'dark';
   toggleTheme: () => void;
 }
 
-const AccountSetup: React.FC<Props> = ({ onComplete, theme, toggleTheme }) => {
-  const [step, setStep] = useState(1); 
+const AccountSetup: React.FC<Props> = ({ onComplete, initialProfile, theme, toggleTheme }) => {
+  const { t } = useI18n();
+  const [step, setStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
   const [profile, setProfile] = useState<UserProfile>({
-    id: Math.random().toString(36).substr(2, 9),
-    email: '',
-    name: '',
-    age_years: 30,
-    sex_at_birth: 'MALE',
-    weight_kg: null,
-    height_cm: null,
-    preferred_units: 'METRIC',
-    preferred_voice: 'Zephyr',
-    speech_speed: 1.0,
-    pregnancy_possible: false,
-    preexisting_conditions: [],
-    known_allergies: [],
-    goals: [],
-    onboarded: true,
+    ...initialProfile,
+    onboarded: false,
     is_subscribed: false
   });
+  const [formError, setFormError] = useState<string | null>(null);
+  const [newAllergy, setNewAllergy] = useState('');
 
-  const handleNext = () => setStep(prev => prev + 1);
+  const KG_TO_LBS = 2.20462;
+  const CM_TO_IN = 0.393701;
+  const price = billingCycle === 'monthly' ? 4.99 : 49.9;
+  const features = ['onboard.feature1', 'onboard.feature2', 'onboard.feature3', 'onboard.feature4'] as const;
 
-  const handleSubscribe = () => {
+  const addAllergy = (name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed || profile.known_allergies.includes(trimmed)) return;
+    setProfile((p) => ({
+      ...p,
+      known_allergies: [...p.known_allergies, trimmed],
+      allergies_confirmed_none: false
+    }));
+    setNewAllergy('');
+  };
+
+  const validateStep2 = () => {
+    const normalized = {
+      ...profile,
+      age_years: profile.age_years && profile.age_years > 0 ? profile.age_years : null
+    };
+    const result = validateProfileBasics(normalized, true);
+    if (!result.valid) {
+      if (result.errors.includes('name')) setFormError(t('onboard.errName'));
+      else if (result.errors.includes('age')) setFormError(t('onboard.errAge'));
+      else if (result.errors.includes('allergies')) setFormError(t('onboard.errAllergies'));
+      else setFormError(t('onboard.errGeneric'));
+      return false;
+    }
+    setFormError(null);
+    return true;
+  };
+
+  const handleNext = () => {
+    if (step === 2 && !validateStep2()) return;
+    setStep((prev) => prev + 1);
+  };
+
+  const handleSubscribe = async () => {
     setIsProcessing(true);
-    setTimeout(() => {
-      setProfile(p => ({ ...p, is_subscribed: true }));
+    setFormError(null);
+    try {
+      const res = await api.billing.checkout();
+      if (res.url) {
+        window.location.href = res.url;
+        return;
+      }
+      if (res.mock) {
+        const confirmed = await api.billing.confirmMock();
+        if (confirmed.profile) {
+          setProfile((p) => ({ ...p, ...(confirmed.profile as UserProfile) }));
+        } else {
+          setProfile((p) => ({ ...p, is_subscribed: true }));
+        }
+        handleNext();
+      }
+    } catch {
+      setFormError(t('onboard.errGeneric'));
+    } finally {
       setIsProcessing(false);
-      handleNext();
-    }, 1500);
+    }
   };
 
   const finish = () => {
-    onComplete(profile);
+    onComplete({ ...profile, onboarded: true });
   };
 
-  const price = billingCycle === 'monthly' ? 4.99 : 49.90;
-
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 font-sans transition-colors duration-500 relative overflow-hidden">
-      
-      {/* Bio-Tech Background Elements */}
-      <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[60%] bg-blue-500/5 blur-[120px] rounded-full pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none"></div>
+    <div className="min-h-screen bg-mrx-canvas dark:bg-mrx-canvas-dark flex flex-col items-center justify-center p-4 sm:p-6 font-sans transition-colors relative overflow-hidden">
+      <div className="absolute top-[-15%] right-[-10%] w-[50%] h-[50%] bg-clinical-500/5 blur-[100px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-500/5 blur-[100px] rounded-full pointer-events-none" />
 
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 p-8 flex justify-between items-center z-50 max-w-7xl mx-auto w-full">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-slate-900 dark:bg-white rounded-xl flex items-center justify-center text-white dark:text-slate-900 font-black text-2xl shadow-2xl transition-transform hover:rotate-12">M</div>
-          <div className="flex flex-col">
-            <span className="text-[11px] font-black tracking-[0.5em] text-slate-500 uppercase leading-none">Setup Protocol</span>
-            <span className="text-[6px] font-black uppercase tracking-[0.3em] text-blue-600 dark:text-blue-400 mt-1">Medication Reactions eXplorer</span>
+      <div className="fixed top-0 left-0 right-0 p-4 sm:p-6 flex justify-between items-center z-50 max-w-2xl mx-auto w-full">
+        <MrxLogo size="sm" />
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex gap-1.5">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className={`h-1.5 w-6 rounded-full transition-all ${step >= i ? 'bg-clinical-600' : 'bg-slate-200 dark:bg-slate-800'}`}
+              />
+            ))}
           </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="hidden sm:flex gap-1">
-             {[1, 2, 3].map(i => (
-               <div key={i} className={`h-1.5 w-8 rounded-full transition-all duration-500 ${step >= i ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-800'}`}></div>
-             ))}
-          </div>
-          <button onClick={toggleTheme} className="w-12 h-12 rounded-2xl bg-white dark:bg-white/5 shadow-2xl flex items-center justify-center text-xl transition-all hover:scale-105 active:scale-90 border border-slate-200 dark:border-white/10">{theme === 'light' ? '🌘' : '☀️'}</button>
+          <ThemeToggle theme={theme} onToggle={toggleTheme} />
         </div>
       </div>
 
-      <div className="max-w-2xl w-full bg-white dark:bg-slate-900 rounded-[4rem] overflow-hidden shadow-3xl border border-slate-200 dark:border-white/5 relative z-10">
-        
+      <div className="max-w-lg w-full mrx-card dark:bg-mrx-panel-dark rounded-2xl shadow-mrx-lg border border-mrx-line dark:border-mrx-line-dark relative z-10 mt-16">
         {step === 1 && (
-          /* STEP 1: SUBSCRIPTION (Merged) */
-          <div className="p-12 md:p-16 animate-in fade-in slide-in-from-right-10 duration-700 space-y-12">
-            <div className="text-center space-y-4">
-              <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.5em]">Phase 01: Authorization</span>
-              <h2 className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-none italic">
-                Unlock <br/> <span className="text-blue-600">Full Analysis.</span>
+          <div className="p-6 sm:p-8 space-y-6 animate-in fade-in duration-500">
+            <div className="text-center space-y-2">
+              <p className="text-[10px] font-semibold text-clinical-600 uppercase tracking-wide">
+                {t('onboard.stepLabel').replace('{step}', '1')}
+              </p>
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+                {t('onboard.planTitle')}
               </h2>
+              <p className="text-sm text-slate-500">{t('onboard.planSubtitle')}</p>
             </div>
 
-            <div className="bg-slate-50 dark:bg-white/5 rounded-[3rem] p-8 space-y-8 border border-slate-100 dark:border-white/5">
-              <div className="flex items-center justify-center gap-6">
-                <span className={`text-[11px] font-black uppercase tracking-widest ${billingCycle === 'monthly' ? 'text-blue-600' : 'text-slate-400'}`}>Monthly</span>
-                <button 
+            <div className="bg-mrx-inset dark:bg-mrx-inset-dark rounded-2xl p-5 space-y-5 border border-mrx-line dark:border-mrx-line-dark">
+              <div className="flex items-center justify-center gap-4">
+                <span className={`text-xs font-semibold ${billingCycle === 'monthly' ? 'text-clinical-600' : 'text-slate-400'}`}>
+                  {t('onboard.monthly')}
+                </span>
+                <button
+                  type="button"
                   onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
-                  className="w-14 h-7 bg-slate-200 dark:bg-slate-800 rounded-full p-1 transition-all flex items-center"
+                  className="w-12 h-6 bg-slate-200 dark:bg-slate-800 rounded-full p-0.5 transition-all flex items-center"
                 >
-                  <div className={`w-5 h-5 bg-blue-600 rounded-full shadow-lg transition-transform transform ${billingCycle === 'yearly' ? 'translate-x-7' : 'translate-x-0'}`}></div>
+                  <div
+                    className={`w-5 h-5 bg-clinical-600 rounded-full shadow-sm transition-transform ${billingCycle === 'yearly' ? 'translate-x-6' : 'translate-x-0'}`}
+                  />
                 </button>
-                <span className={`text-[11px] font-black uppercase tracking-widest ${billingCycle === 'yearly' ? 'text-blue-600' : 'text-slate-400'}`}>Yearly <span className="text-emerald-500 ml-2">-15%</span></span>
+                <span className={`text-xs font-semibold ${billingCycle === 'yearly' ? 'text-clinical-600' : 'text-slate-400'}`}>
+                  {t('onboard.yearly')} <span className="text-emerald-500 ml-1">{t('onboard.discount')}</span>
+                </span>
               </div>
 
-              <div className="text-center space-y-2">
-                <div className="flex items-baseline justify-center gap-2">
-                  <span className="text-6xl font-black tracking-tighter text-slate-900 dark:text-white">${price}</span>
-                  <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">/ {billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
+              <div className="text-center">
+                <div className="flex items-baseline justify-center gap-1">
+                  <span className="text-4xl font-black text-slate-900 dark:text-white">${price}</span>
+                  <span className="text-xs text-slate-400">/ {billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
                 </div>
-                <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Free 7-Day Trial Included</p>
+                <p className="text-xs text-emerald-600 font-semibold mt-2">{t('onboard.trialNote')}</p>
               </div>
 
-              <ul className="grid grid-cols-2 gap-4">
-                {['Unlimited Analysis', 'AI Side Effect Matrix', 'Doctor Reports', '24/7 AI Companion'].map((f, i) => (
-                  <li key={i} className="flex items-center gap-3 text-[10px] font-black text-slate-500 uppercase tracking-tight">
-                    <span className="w-5 h-5 bg-blue-500/10 text-blue-500 rounded-full flex items-center justify-center text-[10px]">✔</span>
-                    {f}
+              <ul className="grid grid-cols-2 gap-2">
+                {features.map((key) => (
+                  <li key={key} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                    <span className="w-5 h-5 bg-clinical-500/10 text-clinical-600 rounded-full flex items-center justify-center text-[10px] shrink-0">
+                      ✔
+                    </span>
+                    {t(key)}
                   </li>
                 ))}
               </ul>
             </div>
 
-            <button 
-              onClick={handleSubscribe} 
+            <button
+              type="button"
+              onClick={handleSubscribe}
               disabled={isProcessing}
-              className="w-full bg-slate-950 dark:bg-white text-white dark:text-slate-950 py-8 rounded-[2.5rem] font-black text-xs uppercase tracking-[0.6em] shadow-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-4"
+              className="w-full mrx-btn-primary py-4 disabled:opacity-50"
             >
-              {isProcessing ? 'Initializing...' : 'Start 7-Day Free Trial'}
+              {isProcessing ? t('onboard.initializing') : t('onboard.startTrial')}
             </button>
           </div>
         )}
 
         {step === 2 && (
-          /* STEP 2: BIO PROFILE (Merged) */
-          <div className="p-12 md:p-16 animate-in fade-in slide-in-from-right-10 duration-700 space-y-12">
-            <div className="space-y-4">
-              <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.5em]">Phase 02: Biological Baseline</span>
-              <h2 className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-none italic">Tell us <span className="text-blue-600">about you.</span></h2>
+          <div className="p-6 sm:p-8 space-y-5 animate-in fade-in duration-500 max-h-[80vh] overflow-y-auto custom-scrollbar">
+            <div className="space-y-1">
+              <p className="text-[10px] font-semibold text-clinical-600 uppercase tracking-wide">
+                {t('onboard.stepLabel').replace('{step}', '2')}
+              </p>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{t('onboard.profileTitle')}</h2>
+              <p className="text-sm text-slate-500">{t('onboard.profileDesc')}</p>
             </div>
-            
-            <div className="space-y-8">
-              <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.4em] ml-4">Full Name / Alias</label>
-                <input 
-                  type="text" 
-                  value={profile.name || ''} 
-                  onChange={e => setProfile({...profile, name: e.target.value})}
-                  className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-6 text-xl font-bold outline-none focus:ring-4 ring-blue-500/10 transition-all dark:text-white"
-                  placeholder="e.g. Alex"
+
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="mrx-label">{t('profile.name')}</label>
+                <input
+                  type="text"
+                  value={profile.name || ''}
+                  onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                  className="mrx-input"
+                  placeholder={t('profile.namePh')}
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.4em] ml-4">Age</label>
-                  <input 
-                    type="number" 
-                    value={profile.age_years || ''} 
-                    onChange={e => setProfile({...profile, age_years: parseInt(e.target.value) || 0})}
-                    className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-6 text-xl font-bold outline-none focus:ring-4 ring-blue-500/10 transition-all dark:text-white"
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="mrx-label">{t('profile.age')}</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={120}
+                    value={profile.age_years ?? ''}
+                    onChange={(e) => setProfile({ ...profile, age_years: parseAge(e.target.value) })}
+                    className="mrx-input"
                   />
                 </div>
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.4em] ml-4">Units</label>
-                  <div className="flex bg-slate-50 dark:bg-white/5 rounded-2xl p-1 border border-slate-200 dark:border-white/10">
-                    <button 
-                      onClick={() => setProfile({...profile, preferred_units: 'METRIC'})}
-                      className={`flex-1 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${profile.preferred_units === 'METRIC' ? 'bg-white dark:bg-slate-800 text-blue-600 shadow-md' : 'text-slate-400'}`}
-                    >
-                      Metric
-                    </button>
-                    <button 
-                      onClick={() => setProfile({...profile, preferred_units: 'IMPERIAL'})}
-                      className={`flex-1 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${profile.preferred_units === 'IMPERIAL' ? 'bg-white dark:bg-slate-800 text-blue-600 shadow-md' : 'text-slate-400'}`}
-                    >
-                      US
-                    </button>
-                  </div>
+                <div className="space-y-1.5">
+                  <label className="mrx-label">{t('profile.sex')}</label>
+                  <select
+                    value={profile.sex_at_birth || 'UNKNOWN'}
+                    onChange={(e) => setProfile({ ...profile, sex_at_birth: e.target.value as UserProfile['sex_at_birth'] })}
+                    className="mrx-input"
+                  >
+                    <option value="MALE">{t('profile.sexMale')}</option>
+                    <option value="FEMALE">{t('profile.sexFemale')}</option>
+                    <option value="UNKNOWN">{t('profile.sexUnknown')}</option>
+                  </select>
                 </div>
               </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="mrx-label">
+                    {t('profile.weight')} ({profile.preferred_units === 'METRIC' ? 'kg' : 'lbs'})
+                  </label>
+                  <input
+                    type="number"
+                    value={
+                      profile.weight_kg
+                        ? profile.preferred_units === 'METRIC'
+                          ? profile.weight_kg
+                          : Math.round(profile.weight_kg * KG_TO_LBS)
+                        : ''
+                    }
+                    onChange={(e) => {
+                      const num = parseFloat(e.target.value);
+                      if (Number.isNaN(num)) {
+                        setProfile({ ...profile, weight_kg: null });
+                        return;
+                      }
+                      setProfile({
+                        ...profile,
+                        weight_kg: profile.preferred_units === 'METRIC' ? num : num / KG_TO_LBS
+                      });
+                    }}
+                    className="mrx-input"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="mrx-label">
+                    {t('profile.height')} ({profile.preferred_units === 'METRIC' ? 'cm' : 'in'})
+                  </label>
+                  <input
+                    type="number"
+                    value={
+                      profile.height_cm
+                        ? profile.preferred_units === 'METRIC'
+                          ? profile.height_cm
+                          : Math.round(profile.height_cm * CM_TO_IN)
+                        : ''
+                    }
+                    onChange={(e) => {
+                      const num = parseFloat(e.target.value);
+                      if (Number.isNaN(num)) {
+                        setProfile({ ...profile, height_cm: null });
+                        return;
+                      }
+                      setProfile({
+                        ...profile,
+                        height_cm: profile.preferred_units === 'METRIC' ? num : num / CM_TO_IN
+                      });
+                    }}
+                    className="mrx-input"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="mrx-label">{t('profile.allergies')}</label>
+                <p className="text-[11px] text-slate-400 -mt-1">{t('profile.allergiesHint')}</p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newAllergy}
+                    onChange={(e) => setNewAllergy(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && addAllergy(newAllergy)}
+                    placeholder={t('profile.allergyPh')}
+                    className="mrx-input flex-1"
+                  />
+                  <button type="button" onClick={() => addAllergy(newAllergy)} className="px-4 rounded-xl bg-rose-500 text-white font-bold">
+                    +
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {COMMON_ALLERGIES.map((a) => (
+                    <button
+                      key={a}
+                      type="button"
+                      onClick={() => addAllergy(a)}
+                      className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-mrx-inset dark:bg-mrx-inset-dark border border-mrx-line dark:border-mrx-line-dark"
+                    >
+                      {a}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {profile.known_allergies.map((a, i) => (
+                    <span key={i} className="px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-600 text-xs font-semibold">
+                      {a}
+                    </span>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setProfile((p) => ({ ...p, known_allergies: [], allergies_confirmed_none: true }))}
+                  className={`text-xs font-semibold underline ${profile.allergies_confirmed_none ? 'text-emerald-600' : 'text-gray-500'}`}
+                >
+                  {t('profile.noAllergies')}
+                </button>
+              </div>
+
+              <ClinicalProfileSection profile={profile} setProfile={setProfile} variant="compact" />
             </div>
 
-            <button 
-              onClick={handleNext}
-              className="w-full bg-blue-600 text-white py-8 rounded-[2.5rem] font-black text-xs uppercase tracking-[0.5em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
-            >
-              Continue Protocol
+            {formError && <p className="text-sm text-rose-600 text-center">{formError}</p>}
+
+            <button type="button" onClick={handleNext} className="w-full mrx-btn-primary py-4">
+              {t('onboard.continue')} →
             </button>
           </div>
         )}
 
         {step === 3 && (
-          /* STEP 3: FINAL CONFIRMATION (Merged) */
-          <div className="p-16 md:p-20 animate-in fade-in slide-in-from-right-10 duration-700 text-center space-y-12">
-            <div className="relative mx-auto w-32 h-32">
-               <div className="absolute inset-0 bg-emerald-500/20 blur-3xl animate-pulse"></div>
-               <div className="relative w-full h-full bg-emerald-500 rounded-[2rem] flex items-center justify-center text-white text-6xl shadow-2xl">✔</div>
+          <div className="p-8 sm:p-10 text-center space-y-6 animate-in fade-in duration-500">
+            <div className="mx-auto w-20 h-20 bg-emerald-500 rounded-2xl flex items-center justify-center text-white text-4xl shadow-mrx-md">
+              ✔
             </div>
-            
-            <div className="space-y-4">
-              <h3 className="text-4xl font-black tracking-tighter uppercase italic leading-none">Sync Ready.</h3>
-              <p className="text-sm font-bold text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm mx-auto italic">
-                Your Bio-Profile and Trial are activated. Dr. BioMath is ready to analyze your pharmacological data.
-              </p>
+            <div className="space-y-2">
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white">{t('onboard.readyTitle')}</h3>
+              <p className="text-sm text-slate-500 max-w-sm mx-auto">{t('onboard.readyDesc')}</p>
             </div>
-
-            <button 
-              onClick={finish} 
-              className="w-full bg-slate-950 dark:bg-white text-white dark:text-slate-950 py-8 rounded-[2.5rem] font-black text-xs uppercase tracking-[0.6em] shadow-2xl hover:scale-[1.02] active:scale-95 transition-all"
-            >
-              Enter Dashboard
+            <button type="button" onClick={finish} className="w-full mrx-btn-primary py-4">
+              {t('onboard.enterDashboard')} →
             </button>
           </div>
         )}
-
       </div>
 
       {isProcessing && (
-        <div className="fixed inset-0 z-[1000] bg-white dark:bg-slate-950 flex flex-col items-center justify-center p-12 space-y-8 animate-in fade-in duration-300">
-           <div className="w-20 h-20 border-8 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-           <div className="text-center space-y-2">
-             <h3 className="text-2xl font-black uppercase tracking-tighter">Connecting Neural Core</h3>
-             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 animate-pulse italic">Securing Clinical Environment...</p>
-           </div>
+        <div className="fixed inset-0 z-[1000] bg-mrx-overlay-dark/80 backdrop-blur-sm flex flex-col items-center justify-center p-8 space-y-4">
+          <div className="w-12 h-12 border-4 border-clinical-600 border-t-transparent rounded-full animate-spin" />
+          <div className="text-center space-y-1">
+            <h3 className="text-lg font-bold text-white">{t('onboard.settingUp')}</h3>
+            <p className="text-xs text-slate-300">{t('onboard.settingUpDesc')}</p>
+          </div>
         </div>
       )}
     </div>
