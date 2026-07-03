@@ -91,6 +91,7 @@ export const api = {
         checkins: unknown[];
         analysisResult: unknown;
         chatMessages: ChatMessagePayload[];
+        isAdmin?: boolean;
       }>('/data/bootstrap'),
     saveProfile: (profile: unknown) => api.put('/data/profile', profile),
     saveMedications: (medications: unknown[]) => api.put('/data/medications', medications),
@@ -174,6 +175,26 @@ export const api = {
     status: () => api.get<{ configured: boolean; publishableKey: string | null }>('/billing/status'),
     checkout: () => api.post<{ url?: string; mock?: boolean; message?: string }>('/billing/checkout'),
     confirmMock: () => api.post<{ ok: boolean; profile: unknown }>('/billing/confirm-mock')
+  },
+
+  admin: {
+    overview: () =>
+      api.get<{
+        userCount: number;
+        totalMeds: number;
+        totalCheckins: number;
+        subscribedCount: number;
+        users: Array<{
+          id: string;
+          email: string;
+          created_at: string;
+          medCount: number;
+          checkinCount: number;
+          isSubscribed: boolean;
+        }>;
+      }>('/admin/overview'),
+    integrations: () => api.get<Record<string, unknown>>('/admin/integrations'),
+    whoami: () => api.get<{ isAdmin: boolean; email: string }>('/admin/whoami')
   }
 };
 

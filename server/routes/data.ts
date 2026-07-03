@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { db } from '../db.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { resolveProfile } from '../lib/profile.js';
+import { isAdminEmail } from '../lib/admin.js';
 
 const router = Router();
 router.use(authMiddleware);
@@ -16,7 +17,8 @@ router.get('/bootstrap', (req, res) => {
     medicationEvents: db.getMedicationEvents(userId),
     checkins: db.getCheckins(userId),
     analysisResult: db.getLatestAnalysis(userId),
-    chatMessages: db.getChatMessages(userId)
+    chatMessages: db.getChatMessages(userId),
+    isAdmin: isAdminEmail(req.user!.email)
   });
 });
 

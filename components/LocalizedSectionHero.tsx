@@ -19,7 +19,7 @@ const LocalizedSectionHero: React.FC<Props> = ({ tabId, icon, color, subtitle, c
       subtitle={subtitle ?? page.subtitle}
       icon={icon ?? page.icon}
       color={color ?? page.color}
-      chips={compact ? [] : getPageChips(tabId)}
+      chips={getPageChips(tabId)}
       compact={compact}
     />
   );

@@ -14,6 +14,7 @@ interface SidebarProps {
   theme?: 'light' | 'dark';
   toggleTheme?: () => void;
   onLogout?: () => void;
+  isAdmin?: boolean;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -24,9 +25,16 @@ const Sidebar: React.FC<SidebarProps> = ({
   onLanguageChange,
   theme,
   toggleTheme,
-  onLogout
+  onLogout,
+  isAdmin = false
 }) => {
   const { t } = useI18n();
+
+  const navItems = NAV_STRUCTURE.filter((item) => {
+    if ('action' in item) return false;
+    if ('adminOnly' in item && item.adminOnly && !isAdmin) return false;
+    return true;
+  });
 
   return (
     <aside
@@ -63,7 +71,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       <nav className="flex-1 px-3 space-y-1 overflow-y-auto custom-scrollbar pb-2">
-        {NAV_STRUCTURE.filter((item) => !('action' in item)).map((item) => {
+        {navItems.map((item) => {
           const isActive = activeTab === item.id;
 
           return (

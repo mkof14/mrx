@@ -19,7 +19,7 @@ import Auth from './components/Auth';
 import Footer from './components/Footer';
 import Legal from './components/Legal';
 import FAQ from './components/FAQ';
-import SystemDiagnostics from './components/SystemDiagnostics';
+import AdminPanel from './components/AdminPanel';
 import ToolsHub from './components/ToolsHub';
 import ShareReportView from './components/ShareReportView';
 import CaregiverView from './components/CaregiverView';
@@ -79,6 +79,7 @@ const App: React.FC = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [stabilityIndex, setStabilityIndex] = useState(1.0);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     try {
@@ -122,6 +123,7 @@ const App: React.FC = () => {
     checkins: unknown[];
     analysisResult: unknown;
     chatMessages?: ChatMessagePayload[];
+    isAdmin?: boolean;
   }) => {
     if (data.profile) {
       const p = data.profile as UserProfile;
@@ -134,6 +136,7 @@ const App: React.FC = () => {
     setCheckins(data.checkins as SymptomEntry[]);
     setAnalysisResult(data.analysisResult);
     setChatMessages((data.chatMessages as ChatMessage[]) || []);
+    setIsAdmin(Boolean(data.isAdmin));
   }, []);
 
   useEffect(() => {
@@ -176,6 +179,14 @@ const App: React.FC = () => {
     };
     bootstrap();
   }, [applyBootstrap]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    api.admin
+      .whoami()
+      .then((r) => setIsAdmin(r.isAdmin))
+      .catch(() => {});
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const lang = profile.preferred_language;
@@ -290,10 +301,11 @@ const App: React.FC = () => {
     if (isLocale(code)) setLocale(code);
   };
 
-  const completeAuth = async (result: { token: string }) => {
+  const completeAuth = async (result: { token: string; isAdmin?: boolean }) => {
     setToken(result.token);
     const data = await api.data.bootstrap();
     applyBootstrap(data);
+    setIsAdmin(Boolean(result.isAdmin ?? data.isAdmin));
     setIsAuthenticated(true);
   };
 
@@ -334,6 +346,7 @@ const App: React.FC = () => {
     skipSaveRef.current = true;
     clearToken();
     setIsAuthenticated(false);
+    setIsAdmin(false);
     setProfile(defaultProfile());
     setMedications([]);
     setMedicationEvents([]);
@@ -515,8 +528,10 @@ const App: React.FC = () => {
         return <FAQ />;
       case 'tools':
         return <ToolsHub profile={profile} setProfile={setProfile} onNavigate={setActiveTab} />;
+      case 'admin':
+        return <AdminPanel isAdmin={isAdmin} />;
       case 'diagnostics':
-        return <SystemDiagnostics />;
+        return <AdminPanel isAdmin={isAdmin} initialTab="connection" />;
       default:
         return (
           <Home
@@ -544,28 +559,30 @@ const App: React.FC = () => {
         theme={theme}
         toggleTheme={toggleTheme}
         onLogout={handleLogout}
+        isAdmin={isAdmin}
       />
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-y-auto overscroll-y-contain">
         <Header profile={profile} theme={theme} toggleTheme={toggleTheme} isSyncing={isSyncing} saveError={saveError} activeTab={activeTab} />
-        <main className="flex-1 p-0">
+        <main className="shrink-0 p-0">
           <div className="max-w-7xl mx-auto pb-8">{renderContent()}</div>
         </main>
 
-        <div className="w-full text-center py-5 px-6 no-print bg-mrx-inset/60 dark:bg-mrx-inset-dark/60 border-t border-mrx-line dark:border-mrx-line-dark">
+        <div className="shrink-0 w-full text-center py-5 px-6 no-print bg-mrx-inset/60 dark:bg-mrx-inset-dark/60 border-t border-mrx-line dark:border-mrx-line-dark">
           <p className="text-xs text-gray-500 dark:text-zinc-500">{t('common.disclaimer')}</p>
         </div>
 
-        <Footer
-          onOpenLegal={handleOpenLegal}
-          onOpenFAQ={() => setActiveTab('faq')}
-          onLanguageChange={handleLanguageChange}
-          theme={theme}
-          toggleTheme={toggleTheme}
-          isAuthenticated
-          onSignOut={handleLogout}
-        />
+        <div className="shrink-0">
+          <Footer
+            onOpenLegal={handleOpenLegal}
+            onOpenFAQ={() => setActiveTab('faq')}
+            onOpenAdmin={() => setActiveTab('admin')}
+            onLanguageChange={handleLanguageChange}
+            theme={theme}
+            toggleTheme={toggleTheme}
+          />
+        </div>
       </div>
-      <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
+      <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} />
     </div>
   );
 };

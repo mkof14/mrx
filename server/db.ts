@@ -1,12 +1,4 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const dataDir = process.env.DATABASE_PATH
-  ? path.dirname(process.env.DATABASE_PATH)
-  : path.join(__dirname, '..', 'data');
-const dbFile = process.env.DATABASE_PATH || path.join(dataDir, 'mrx.json');
+import { getDatabasePathLabel, loadDatabase, saveDatabase } from './storage.js';
 
 export interface DbSchema {
   users: Array<{
@@ -26,59 +18,60 @@ export interface DbSchema {
   caregiver_invites?: Record<string, string>;
 }
 
-const emptyDb = (): DbSchema => ({
-  users: [],
-  profiles: {},
-  medications: {},
-  medication_events: {},
-  checkins: {},
-  analyses: {},
-  chat_messages: {},
-  share_links: {},
-  caregiver_invites: {}
-});
-
 let writeQueue: Promise<void> = Promise.resolve();
+let activeDb: DbSchema | null = null;
 
-function ensureDir() {
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-  }
+function emptyDb(): DbSchema {
+  return {
+    users: [],
+    profiles: {},
+    medications: {},
+    medication_events: {},
+    checkins: {},
+    analyses: {},
+    chat_messages: {},
+    share_links: {},
+    caregiver_invites: {}
+  };
 }
 
 function readDb(): DbSchema {
-  ensureDir();
-  if (!fs.existsSync(dbFile)) {
-    const db = emptyDb();
-    fs.writeFileSync(dbFile, JSON.stringify(db, null, 2));
-    return db;
+  if (!activeDb) {
+    throw new Error('Database not loaded — call attachDatabase() first');
   }
-  const db = JSON.parse(fs.readFileSync(dbFile, 'utf-8')) as DbSchema;
-  if (!db.share_links) db.share_links = {};
-  if (!db.caregiver_invites) db.caregiver_invites = {};
-  if (!db.chat_messages) db.chat_messages = {};
-  return db;
+  return activeDb;
 }
 
-function writeDb(db: DbSchema) {
-  ensureDir();
-  fs.writeFileSync(dbFile, JSON.stringify(db, null, 2));
+async function persistDb(db: DbSchema) {
+  await saveDatabase(db);
 }
 
 function mutateDb<T>(fn: (db: DbSchema) => T): Promise<T> {
-  const task = writeQueue.then(() => {
-    const data = readDb();
-    const result = fn(data);
-    writeDb(data);
+  const task = writeQueue.then(async () => {
+    if (!activeDb) {
+      activeDb = await loadDatabase(emptyDb);
+    }
+    const result = fn(activeDb);
+    await persistDb(activeDb);
     return result;
   });
   writeQueue = task.then(() => undefined).catch(() => undefined);
   return task;
 }
 
-export function initDatabase() {
-  readDb();
+export async function attachDatabase() {
+  activeDb = await loadDatabase(emptyDb);
 }
+
+export function detachDatabase() {
+  activeDb = null;
+}
+
+export async function initDatabase() {
+  await attachDatabase();
+}
+
+export { getDatabasePathLabel };
 
 export function generateId() {
   return Math.random().toString(36).slice(2, 11);
@@ -198,6 +191,44 @@ export const db = {
       data.medication_events[userId] = payload.medicationEvents.map((e) => JSON.stringify(e));
       data.checkins[userId] = payload.checkins.map((c) => JSON.stringify(c));
     });
+  },
+
+  getAdminOverview() {
+    const data = readDb();
+    let totalMeds = 0;
+    let totalCheckins = 0;
+    let subscribed = 0;
+
+    const users = data.users.map((u) => {
+      const medCount = (data.medications[u.id] || []).length;
+      const checkinCount = (data.checkins[u.id] || []).length;
+      totalMeds += medCount;
+      totalCheckins += checkinCount;
+      let isSubscribed = false;
+      try {
+        const p = data.profiles[u.id] ? JSON.parse(data.profiles[u.id]) : null;
+        isSubscribed = Boolean(p?.is_subscribed);
+        if (isSubscribed) subscribed += 1;
+      } catch {
+        /* ignore */
+      }
+      return {
+        id: u.id,
+        email: u.email,
+        created_at: u.created_at,
+        medCount,
+        checkinCount,
+        isSubscribed
+      };
+    });
+
+    return {
+      userCount: data.users.length,
+      totalMeds,
+      totalCheckins,
+      subscribedCount: subscribed,
+      users: users.sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 50)
+    };
   },
 
   async linkGoogleAccount(userId: string, googleId: string) {

@@ -17,6 +17,7 @@ import {
   type ParsedMedication
 } from '../utils/medicationForm';
 import { createSpeechRecognition, isSpeechRecognitionSupported } from '../utils/speechRecognition';
+import { PageGuide, PageSummaryRow } from './ui/PageGuide';
 
 interface Props {
   medications: Medication[];
@@ -640,13 +641,21 @@ const MedicationList: React.FC<Props> = ({ medications, medicationEvents, onUpda
           </PageCard>
         </div>
       ) : medications.length === 0 ? (
-        <PageCard padding="lg" className="text-center space-y-8">
-          <div className="inline-flex w-24 h-24 rounded-3xl bg-clinical-500/10 items-center justify-center text-5xl">💊</div>
+        <div className="space-y-5">
+          <PageGuide
+            icon="💊"
+            title={t('page.meds.guideTitle')}
+            text={t('page.meds.guideText')}
+            steps={[t('page.meds.guideStep1'), t('page.meds.guideStep2'), t('page.meds.guideStep3')]}
+            accent="#8b5cf6"
+          />
+          <PageCard padding="lg" className="text-center space-y-8">
+          <div className="inline-flex w-16 h-16 rounded-2xl bg-clinical-500/10 items-center justify-center text-3xl">💊</div>
           <div className="space-y-2 max-w-md mx-auto">
             <p className="text-xl font-bold text-gray-900 dark:text-zinc-100">{t('meds.emptyTitle')}</p>
             <p className="text-sm text-slate-500">{t('meds.methodsHint')}</p>
           </div>
-          <div className="flex flex-wrap justify-center gap-2 text-2xl opacity-80">
+          <div className="flex flex-wrap justify-center gap-2 text-lg opacity-80">
             <span title={t('meds.inputType')}>⌨️</span>
             <span title={t('meds.inputPhoto')}>📷</span>
             <span title={t('meds.inputPaste')}>📋</span>
@@ -655,12 +664,51 @@ const MedicationList: React.FC<Props> = ({ medications, medicationEvents, onUpda
           <button type="button" onClick={() => setIsAdding(true)} className="mrx-btn-primary px-10 py-4 text-base">
             {t('meds.addBtn')} →
           </button>
-        </PageCard>
+          </PageCard>
+        </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-5">
+          <PageGuide
+            icon="💊"
+            title={t('page.meds.guideTitle')}
+            text={t('page.meds.guideText')}
+            steps={[t('page.meds.guideStep1'), t('page.meds.guideStep2'), t('page.meds.guideStep3')]}
+            accent="#8b5cf6"
+          />
+
+          <PageSummaryRow
+            items={[
+              { label: t('page.meds.chip1'), value: medications.length, color: '#8b5cf6', icon: '💊' },
+              { label: t('page.meds.chip3'), value: medications.filter((m) => m.status === 'ACTIVE').length, color: '#10b981', icon: '✓' },
+              { label: t('meds.methodsTitle'), value: '5', hint: '⌨️ 📷 📋 🎤 📊', color: '#2563eb', icon: '➕' },
+              { label: t('home.dashboard.interactions'), value: '—', hint: t('page.meds.guideStep3'), color: '#f59e0b', icon: '🔍' }
+            ]}
+          />
+
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">{t('meds.methodsTitle')}</p>
+            <div className="flex flex-wrap gap-2">
+              {INPUT_MODES.map(({ id, icon, key }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => {
+                    setIsAdding(true);
+                    setInputMode(id);
+                    if (id === 'photo') setTimeout(() => fileInputRef.current?.click(), 100);
+                  }}
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold border border-mrx-line dark:border-mrx-line-dark bg-white dark:bg-mrx-panel-dark hover:border-clinical-500 hover:bg-clinical-500/5 transition-colors"
+                >
+                  <span>{icon}</span>
+                  {t(key)}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-clinical-600 text-white flex items-center justify-center text-2xl font-black shadow-mrx-sm">
+              <div className="w-11 h-11 rounded-xl bg-clinical-600 text-white flex items-center justify-center text-lg font-black shadow-mrx-sm">
                 {medications.length}
               </div>
               <div>
@@ -691,7 +739,7 @@ const MedicationList: React.FC<Props> = ({ medications, medicationEvents, onUpda
                   <div className="absolute left-0 top-0 bottom-0 w-1.5" style={{ backgroundColor: color }} />
                   <div className="p-6 pl-7 flex gap-4">
                     <div
-                      className="w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center text-3xl"
+                      className="w-11 h-11 shrink-0 rounded-xl flex items-center justify-center text-xl"
                       style={{ backgroundColor: `${color}18` }}
                     >
                       💊

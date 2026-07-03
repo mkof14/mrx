@@ -12,6 +12,7 @@ import {
   LiveDot,
   SectionLabel
 } from './ui/MrxUI';
+import { PageGuide, PageSummaryRow } from './ui/PageGuide';
 
 interface Props {
   medications: Medication[];
@@ -110,6 +111,23 @@ const Home: React.FC<Props> = ({
         <div className="rounded-xl bg-rose-50 dark:bg-rose-900/20 border border-rose-200 px-4 py-2.5 text-sm text-rose-700">{aiError}</div>
       )}
 
+      <PageGuide
+        icon="🏠"
+        title={t('page.home.guideTitle')}
+        text={t('page.home.guideText')}
+        steps={[t('page.home.guideStep1'), t('page.home.guideStep2'), t('page.home.guideStep3')]}
+        accent="#3b82f6"
+      />
+
+      <PageSummaryRow
+        items={[
+          { label: t('home.dashboard.meds'), value: medications.length, color: '#3b82f6', icon: '💊' },
+          { label: t('home.dashboard.wellness'), value: `${wellnessPct}%`, color: wellnessColor, icon: '❤️' },
+          { label: t('home.dashboard.warnings'), value: warningCount || '0', color: warningCount ? '#ef4444' : '#94a3b8', icon: '⚠️' },
+          { label: t('home.dashboard.interactions'), value: interactions.length || '0', color: criticalInteractions ? '#f59e0b' : '#94a3b8', icon: '🧩' }
+        ]}
+      />
+
       <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
         <StatPill label={t('home.dashboard.meds')} value={medications.length} color="#3b82f6" onClick={() => onNavigate?.('meds')} />
         <StatPill label={t('home.dashboard.wellness')} value={`${wellnessPct}%`} color={wellnessColor} onClick={() => onNavigate?.('checkin')} />
@@ -175,9 +193,16 @@ const Home: React.FC<Props> = ({
             </PageCard>
           )}
 
-          <PageCard padding="sm" className="bg-gradient-to-br from-clinical-500/5 to-transparent">
-            <LiveDot label={t('home.summaryTitle')} />
-            <p className="text-sm font-semibold text-slate-800 dark:text-zinc-100 leading-snug mt-2">{summary || t('home.summaryFallback')}</p>
+          <PageCard padding="sm" className="bg-gradient-to-br from-clinical-500/10 via-violet-500/5 to-transparent border-2 border-clinical-200/30 dark:border-clinical-800/30">
+            <div className="flex items-start gap-3">
+              <div className="w-11 h-11 rounded-xl bg-clinical-600 text-white flex items-center justify-center text-xl shrink-0 shadow-mrx-sm">
+                ✨
+              </div>
+              <div className="min-w-0">
+                <LiveDot label={t('home.summaryTitle')} />
+                <p className="text-base font-semibold text-slate-800 dark:text-zinc-100 leading-snug mt-2">{summary || t('home.summaryFallback')}</p>
+              </div>
+            </div>
           </PageCard>
 
           {safetyFlags.length > 0 && (

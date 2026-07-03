@@ -11,13 +11,25 @@ import aiRoutes from './routes/ai.js';
 import medicationsRoutes from './routes/medications.js';
 import shareRoutes from './routes/share.js';
 import billingRoutes from './routes/billing.js';
-import { initDatabase } from './db.js';
+import adminRoutes from './routes/admin.js';
+import { attachDatabase, initDatabase } from './db.js';
+import { getStorageMode } from './storage.js';
+import { isGeminiConfigured } from './services/gemini.js';
+import { isElevenLabsConfigured } from './services/elevenlabs.js';
+import { isGoogleAuthConfigured } from './services/googleAuth.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 let dbReady = false;
 
+function resolveClientOrigin(): string {
+  if (process.env.CLIENT_ORIGIN) return process.env.CLIENT_ORIGIN;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return 'http://localhost:3000';
+}
+
 function ensureDataDir() {
+  if (getStorageMode() === 'redis') return;
   const dataDir = process.env.DATABASE_PATH
     ? path.dirname(process.env.DATABASE_PATH)
     : path.join(__dirname, '..', 'data');
@@ -27,13 +39,7 @@ function ensureDataDir() {
 }
 
 export function createApp() {
-  if (!dbReady) {
-    ensureDataDir();
-    initDatabase();
-    dbReady = true;
-  }
-
-  const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:3000';
+  const CLIENT_ORIGIN = resolveClientOrigin();
   const app = express();
 
   app.use(cors({ origin: CLIENT_ORIGIN, credentials: true }));
@@ -41,7 +47,46 @@ export function createApp() {
   app.use(cookieParser());
 
   app.get('/api/health', (_req, res) => {
-    res.json({ status: 'ok', service: 'mrx-api', version: '1.0.0' });
+    const jwtOk = Boolean(
+      process.env.JWT_SECRET && process.env.JWT_SECRET !== 'mrx-dev-secret-change-in-production'
+    );
+    res.json({
+      status: 'ok',
+      service: 'mrx-api',
+      version: '1.2.0',
+      storage: getStorageMode(),
+      clientOrigin: CLIENT_ORIGIN,
+      ready: {
+        gemini: isGeminiConfigured(),
+        elevenlabs: isElevenLabsConfigured(),
+        googleAuth: isGoogleAuthConfigured(),
+        jwt: jwtOk,
+        persistentDb: getStorageMode() === 'redis'
+      },
+      warnings: [
+        !isGeminiConfigured() ? 'Set GEMINI_API_KEY for AI chat, analysis, and label scan' : null,
+        !jwtOk ? 'Set JWT_SECRET to a long random string in production' : null,
+        process.env.VERCEL && getStorageMode() !== 'redis'
+          ? 'Connect Upstash Redis on Vercel — file storage is wiped on redeploy'
+          : null
+      ].filter(Boolean)
+    });
+  });
+
+  app.use('/api', async (_req, _res, next) => {
+    try {
+      if (!dbReady) {
+        ensureDataDir();
+        await initDatabase();
+        dbReady = true;
+      } else {
+        await attachDatabase();
+      }
+      next();
+    } catch (err) {
+      console.error('Database load failed:', err);
+      next(err);
+    }
   });
 
   app.use('/api/auth', authRoutes);
@@ -50,6 +95,7 @@ export function createApp() {
   app.use('/api/medications', medicationsRoutes);
   app.use('/api/share', shareRoutes);
   app.use('/api/billing', billingRoutes);
+  app.use('/api/admin', adminRoutes);
 
   // Self-hosted production only — Vercel serves `dist/` separately
   if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {

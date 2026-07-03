@@ -4,7 +4,7 @@ import PageCard, { PageSectionTitle } from './PageCard';
 import { api } from '../services/apiClient';
 import { useI18n } from '../i18n/I18nContext';
 
-const SystemDiagnostics: React.FC = () => {
+const SystemDiagnostics: React.FC<{ embedded?: boolean }> = ({ embedded }) => {
   const { t } = useI18n();
   const [hwStatus, setHwStatus] = useState({ mic: 'PENDING', cam: 'PENDING', storage: 'PENDING' });
   const [aiPing, setAiPing] = useState<{ status: string; latency: number | null; configured: boolean }>({
@@ -92,12 +92,12 @@ const SystemDiagnostics: React.FC = () => {
     { name: t('diag.svcWellness'), id: 'local', role: t('home.stability.title'), type: 'Score' }
   ];
 
-  return (
-    <PageShell tabId="diagnostics">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+  const inner = (
+    <>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <PageCard padding="md" className="text-center bg-mrx-inset dark:bg-mrx-inset-dark">
             <span className="text-xs font-semibold text-gray-500 block mb-2">{t('diag.latency')}</span>
-            <div className="text-3xl font-bold text-gray-900 dark:text-zinc-100">{aiPing.latency ? `${aiPing.latency}ms` : '—'}</div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-zinc-100">{aiPing.latency ? `${aiPing.latency}ms` : '—'}</div>
             <div className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold ${aiPing.status === 'STABLE' ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-gray-600'}`}>
               {aiPing.status}
             </div>
@@ -105,7 +105,7 @@ const SystemDiagnostics: React.FC = () => {
 
           <PageCard padding="md" className="text-center bg-mrx-inset dark:bg-mrx-inset-dark">
             <span className="text-xs font-semibold text-gray-500 block mb-2">{t('diag.mic')}</span>
-            <div className={`text-3xl font-bold ${hwStatus.mic === 'ACTIVE' ? 'text-emerald-500' : 'text-rose-500'}`}>
+            <div className={`text-2xl font-bold ${hwStatus.mic === 'ACTIVE' ? 'text-emerald-500' : 'text-rose-500'}`}>
               {hwStatus.mic === 'ACTIVE' ? t('diag.ready') : t('diag.error')}
             </div>
           </PageCard>
@@ -119,7 +119,7 @@ const SystemDiagnostics: React.FC = () => {
 
           <PageCard padding="md" className="text-center bg-mrx-inset dark:bg-mrx-inset-dark">
             <span className="text-xs font-semibold text-gray-500 block mb-2">{t('diag.storage')}</span>
-            <div className="text-3xl font-bold text-gray-900 dark:text-zinc-100">{hwStatus.storage}</div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-zinc-100">{hwStatus.storage}</div>
           </PageCard>
         </div>
 
@@ -176,8 +176,14 @@ const SystemDiagnostics: React.FC = () => {
             ))}
           </div>
         </PageCard>
-    </PageShell>
+    </>
   );
+
+  if (embedded) {
+    return <div className="p-4 space-y-4 bg-mrx-canvas dark:bg-mrx-canvas-dark">{inner}</div>;
+  }
+
+  return <PageShell tabId="diagnostics">{inner}</PageShell>;
 };
 
 export default SystemDiagnostics;

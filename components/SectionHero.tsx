@@ -36,6 +36,11 @@ const SectionHero: React.FC<SectionHeroProps> = ({ title, subtitle, icon, color,
                   {subtitle}
                 </p>
               )}
+              {compact && subtitle && (
+                <p className="mt-1 text-xs text-gray-500 dark:text-zinc-500 leading-snug max-w-xl line-clamp-2">
+                  {subtitle}
+                </p>
+              )}
             </div>
             {chips.length > 0 && (
               <div className="flex flex-wrap justify-center md:justify-start gap-2">

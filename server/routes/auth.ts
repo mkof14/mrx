@@ -5,6 +5,7 @@ import { authMiddleware, signToken } from '../middleware/auth.js';
 import { defaultProfile, resolveProfile, isValidProfile } from '../lib/profile.js';
 
 import { isGoogleAuthConfigured, verifyGoogleCredential } from '../services/googleAuth.js';
+import { isAdminEmail } from '../lib/admin.js';
 
 const router = Router();
 
@@ -41,7 +42,7 @@ router.post('/google', async (req, res) => {
     }
 
     const token = signToken({ userId: user.id, email: user.email });
-    res.json({ token, user: { id: user.id, email: user.email }, profile });
+    res.json({ token, user: { id: user.id, email: user.email }, profile, isAdmin: isAdminEmail(user.email) });
   } catch (err) {
     console.error('Google auth error:', err);
     res.status(401).json({ error: err instanceof Error ? err.message : 'Google sign-in failed' });
@@ -71,7 +72,7 @@ router.post('/register', async (req, res) => {
     await db.saveProfile(userId, profile);
 
     const token = signToken({ userId, email: normalizedEmail });
-    res.status(201).json({ token, user: { id: userId, email: normalizedEmail }, profile });
+    res.status(201).json({ token, user: { id: userId, email: normalizedEmail }, profile, isAdmin: isAdminEmail(normalizedEmail) });
   } catch (err) {
     console.error('Register error:', err);
     res.status(500).json({ error: 'Registration failed' });
@@ -107,7 +108,8 @@ router.post('/login', async (req, res) => {
     res.json({
       token,
       user: { id: user.id, email: user.email },
-      profile
+      profile,
+      isAdmin: isAdminEmail(user.email)
     });
   } catch (err) {
     console.error('Login error:', err);
@@ -121,7 +123,8 @@ router.get('/me', authMiddleware, (req, res) => {
 
   res.json({
     user: { id: req.user!.userId, email: req.user!.email },
-    profile
+    profile,
+    isAdmin: isAdminEmail(req.user!.email)
   });
 });
 

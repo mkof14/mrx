@@ -45,6 +45,18 @@ const Auth: React.FC<AuthProps> = ({
 
   const funFacts = ['auth.funFact1', 'auth.funFact2', 'auth.funFact3', 'auth.funFact4'] as const;
 
+  const benefits = [
+    { icon: '💊', titleKey: 'auth.benefit1Title' as const, textKey: 'auth.benefit1Text' as const, accent: 'border-clinical-400/50 bg-clinical-500/10' },
+    { icon: '📈', titleKey: 'auth.benefit2Title' as const, textKey: 'auth.benefit2Text' as const, accent: 'border-emerald-400/50 bg-emerald-500/10' },
+    { icon: '⚠️', titleKey: 'auth.benefit3Title' as const, textKey: 'auth.benefit3Text' as const, accent: 'border-amber-400/50 bg-amber-500/10' }
+  ] as const;
+
+  const steps = [
+    { icon: '➕', titleKey: 'home.step1' as const, descKey: 'home.step1desc' as const, delay: '0ms' },
+    { icon: '🔍', titleKey: 'home.step2' as const, descKey: 'home.step2desc' as const, delay: '100ms' },
+    { icon: '📝', titleKey: 'home.step3' as const, descKey: 'home.step3desc' as const, delay: '200ms' }
+  ] as const;
+
   const handleLocaleChange = (code: string) => {
     if (isLocale(code)) setLocale(code);
     onLanguageChange?.(code);
@@ -150,7 +162,7 @@ const Auth: React.FC<AuthProps> = ({
       {floatingIcons.map((icon, i) => (
         <span
           key={icon}
-          className="absolute text-2xl sm:text-3xl opacity-[0.12] dark:opacity-[0.18] pointer-events-none animate-drift select-none"
+          className="absolute text-lg sm:text-xl opacity-[0.1] dark:opacity-[0.14] pointer-events-none select-none"
           style={{
             top: `${8 + (i * 14) % 72}%`,
             left: `${4 + (i * 17) % 88}%`,
@@ -168,42 +180,17 @@ const Auth: React.FC<AuthProps> = ({
       <nav className="sticky top-0 z-50 w-full border-b border-mrx-line dark:border-mrx-line-dark bg-mrx-canvas/85 dark:bg-mrx-sidebar-dark/85 backdrop-blur-md animate-fade-up">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center gap-3">
           <MrxLogo size="md" className="cursor-pointer" />
-          <div className="hidden md:flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => openLegal('features')}
-              className="px-3 py-2 text-xs font-semibold text-gray-600 dark:text-zinc-400 hover:text-clinical-600 rounded-lg hover:bg-white/60 dark:hover:bg-white/5 transition-colors"
-            >
-              {t('footer.features')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowFAQModal(true)}
-              className="px-3 py-2 text-xs font-semibold text-gray-600 dark:text-zinc-400 hover:text-clinical-600 rounded-lg hover:bg-white/60 dark:hover:bg-white/5 transition-colors"
-            >
-              {t('footer.faq')}
-            </button>
-          </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <ThemeToggle theme={theme} onToggle={toggleTheme} />
             <LanguageSelector align="right" onChange={handleLocaleChange} />
             {!showLoginForm ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => openSignIn(false)}
-                  className="hidden sm:inline-flex px-4 py-2.5 rounded-xl text-xs font-bold border border-mrx-line dark:border-mrx-line-dark text-gray-700 dark:text-zinc-200 hover:border-clinical-500 hover:text-clinical-600 transition-colors"
-                >
-                  {t('nav.signIn')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => openSignIn(true)}
-                  className="mrx-btn-rainbow px-4 sm:px-6 py-2.5 text-xs sm:text-sm"
-                >
-                  {t('auth.signUp')}
-                </button>
-              </>
+              <button
+                type="button"
+                onClick={() => openSignIn(false)}
+                className="mrx-btn-rainbow px-4 sm:px-6 py-2.5 text-xs sm:text-sm"
+              >
+                {t('nav.signInUp')}
+              </button>
             ) : (
               <button
                 type="button"
@@ -221,40 +208,47 @@ const Auth: React.FC<AuthProps> = ({
         {!showLoginForm ? (
           <div className="max-w-6xl w-full space-y-10 py-6 lg:py-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 items-center">
-              <div className="space-y-6 text-center lg:text-left animate-in fade-in slide-in-from-left-8 duration-700">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-clinical-50 dark:bg-clinical-950/40 border border-clinical-200 dark:border-clinical-800 text-clinical-700 dark:text-clinical-300 text-xs font-semibold">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <div className="space-y-5 text-center lg:text-left animate-in fade-in slide-in-from-left-8 duration-700">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-clinical-50 dark:bg-clinical-950/40 border border-clinical-200 dark:border-clinical-800 text-clinical-700 dark:text-clinical-300 text-[11px] font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   {t('home.live.tag')}
                 </div>
-                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-zinc-50 tracking-tight leading-[1.08]">
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-zinc-50 tracking-tight leading-[1.12]">
                   {t('auth.heroTitle1')}
                   <br />
                   <span className="text-clinical-600 dark:text-clinical-400">{t('auth.heroTitle2')}</span>
                 </h1>
-                <p className="text-gray-600 dark:text-zinc-400 text-lg md:text-xl max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                <p className="text-gray-600 dark:text-zinc-400 text-base md:text-lg max-w-xl mx-auto lg:mx-0 leading-relaxed">
                   {t('auth.heroSubtitle')}
                 </p>
 
-                <div className="flex flex-wrap justify-center lg:justify-start gap-2">
-                  {[
-                    { icon: '🧬', label: t('auth.statRx') },
-                    { icon: '🌍', label: t('auth.statLang') },
-                    { icon: '🎙️', label: t('auth.statVoice') }
-                  ].map(({ icon, label }) => (
-                    <span
-                      key={label}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/80 dark:bg-mrx-panel-dark/80 border border-mrx-line dark:border-mrx-line-dark text-[11px] font-bold text-slate-600 dark:text-slate-300 shadow-mrx-sm"
-                    >
-                      {icon} {label}
-                    </span>
-                  ))}
+                <div className="max-w-xl mx-auto lg:mx-0 text-left">
+                  <p className="text-[10px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-widest mb-2">
+                    {t('auth.whatYouGet')}
+                  </p>
+                  <ul className="space-y-2">
+                    {benefits.map(({ icon, titleKey, textKey, accent }) => (
+                      <li
+                        key={titleKey}
+                        className={`flex gap-3 p-3 rounded-xl border ${accent} backdrop-blur-sm`}
+                      >
+                        <span className="w-8 h-8 shrink-0 rounded-lg bg-white/70 dark:bg-white/10 flex items-center justify-center text-base leading-none">
+                          {icon}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-slate-900 dark:text-white leading-tight">{t(titleKey)}</p>
+                          <p className="text-xs text-slate-600 dark:text-zinc-400 mt-0.5 leading-relaxed">{t(textKey)}</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
 
-                <div className="mrx-card dark:bg-mrx-panel-dark rounded-2xl p-4 border border-clinical-200/50 dark:border-clinical-900/50 bg-clinical-50/50 dark:bg-clinical-950/20 max-w-xl mx-auto lg:mx-0">
-                  <p className="text-[10px] font-black text-clinical-600 uppercase tracking-widest mb-2">
+                <div className="mrx-card dark:bg-mrx-panel-dark rounded-xl p-3 border border-clinical-200/50 dark:border-clinical-900/50 bg-clinical-50/50 dark:bg-clinical-950/20 max-w-xl mx-auto lg:mx-0">
+                  <p className="text-[9px] font-black text-clinical-600 uppercase tracking-widest mb-1.5">
                     💡 {t('auth.didYouKnow')}
                   </p>
-                  <p key={funFactIdx} className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed animate-fact-in">
+                  <p key={funFactIdx} className="text-xs text-slate-700 dark:text-zinc-300 leading-relaxed animate-fact-in">
                     {t(funFacts[funFactIdx])}
                   </p>
                 </div>
@@ -262,7 +256,7 @@ const Auth: React.FC<AuthProps> = ({
                 <button
                   type="button"
                   onClick={() => openSignIn(true)}
-                  className="mrx-btn-rainbow px-7 py-3 text-sm"
+                  className="mrx-btn-rainbow px-6 py-2.5 text-sm"
                 >
                   {t('auth.startTracking')} →
                 </button>
@@ -273,26 +267,24 @@ const Auth: React.FC<AuthProps> = ({
               </div>
             </div>
 
-            {/* Animated capability cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
-              {[
-                { icon: '💊', titleKey: 'home.step1' as const, descKey: 'home.step1desc' as const, delay: '0ms' },
-                { icon: '📝', titleKey: 'home.step2' as const, descKey: 'home.step2desc' as const, delay: '80ms' },
-                { icon: '📋', titleKey: 'home.step3' as const, descKey: 'home.step3desc' as const, delay: '160ms' },
-                { icon: '🧩', titleKey: 'home.cap1' as const, descKey: 'home.cap1desc' as const, delay: '240ms' },
-                { icon: '🛡️', titleKey: 'home.cap4' as const, descKey: 'home.cap4desc' as const, delay: '320ms' },
-                { icon: '🎙️', titleKey: 'home.cap5' as const, descKey: 'home.cap5desc' as const, delay: '400ms' }
-              ].map(({ icon, titleKey, descKey, delay }) => (
-                <div
-                  key={titleKey}
-                  className="mrx-card dark:bg-mrx-panel-dark rounded-2xl p-5 border border-mrx-line dark:border-mrx-line-dark hover:scale-[1.03] hover:shadow-mrx-md hover:border-clinical-400/40 transition-all opacity-0 animate-fade-up group"
-                  style={{ animationDelay: delay }}
-                >
-                  <span className="text-3xl block mb-3 group-hover:animate-drift">{icon}</span>
-                  <p className="text-sm font-bold text-slate-900 dark:text-white">{t(titleKey)}</p>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">{t(descKey)}</p>
-                </div>
-              ))}
+            {/* How it works — 3 simple steps */}
+            <div className="pt-2 space-y-3">
+              <p className="text-center text-[10px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-widest">
+                {t('auth.commonQuestions')}
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {steps.map(({ icon, titleKey, descKey, delay }) => (
+                  <div
+                    key={titleKey}
+                    className="mrx-card dark:bg-mrx-panel-dark rounded-xl p-4 border border-mrx-line dark:border-mrx-line-dark hover:border-clinical-400/40 transition-colors opacity-0 animate-fade-up"
+                    style={{ animationDelay: delay }}
+                  >
+                    <span className="text-lg block mb-2 leading-none">{icon}</span>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white leading-tight">{t(titleKey)}</p>
+                    <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1 leading-relaxed">{t(descKey)}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         ) : (
@@ -383,8 +375,6 @@ const Auth: React.FC<AuthProps> = ({
         onLanguageChange={handleLocaleChange}
         theme={theme}
         toggleTheme={toggleTheme}
-        isAuthenticated={false}
-        onSignIn={() => openSignIn(false)}
       />
 
       {showLegalModal && (

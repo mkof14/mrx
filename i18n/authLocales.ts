@@ -4,6 +4,13 @@ export type AuthTranslationKey =
   | 'auth.heroTitle1'
   | 'auth.heroTitle2'
   | 'auth.heroSubtitle'
+  | 'auth.whatYouGet'
+  | 'auth.benefit1Title'
+  | 'auth.benefit1Text'
+  | 'auth.benefit2Title'
+  | 'auth.benefit2Text'
+  | 'auth.benefit3Title'
+  | 'auth.benefit3Text'
   | 'auth.startTracking'
   | 'auth.logIn'
   | 'auth.close'
@@ -52,10 +59,17 @@ export type AuthTranslationKey =
 
 export const authStrings: Record<Locale, Record<AuthTranslationKey, string>> = {
   en: {
-    'auth.heroTitle1': 'Your medications.',
-    'auth.heroTitle2': 'Clear and personal.',
+    'auth.heroTitle1': 'Understand your medications',
+    'auth.heroTitle2': 'in plain language',
     'auth.heroSubtitle':
-      'Add what you take. See interactions, side effects, and how you feel — all in one place.',
+      'MRX explains what you take, how drugs work together, possible side effects, and how your body reacts — simply, in one place.',
+    'auth.whatYouGet': 'What you get',
+    'auth.benefit1Title': 'Clear med info',
+    'auth.benefit1Text': 'What each drug is, why you take it, and what to watch for — no medical jargon.',
+    'auth.benefit2Title': 'Your reactions',
+    'auth.benefit2Text': 'Log how you feel and see if symptoms change when you start, stop, or switch a drug.',
+    'auth.benefit3Title': 'Side effects & safety',
+    'auth.benefit3Text': 'Possible side effects, drug interactions, and warnings tailored to your list.',
     'auth.startTracking': 'Get started',
     'auth.logIn': 'Log in',
     'auth.close': 'Close',
@@ -109,6 +123,13 @@ export const authStrings: Record<Locale, Record<AuthTranslationKey, string>> = {
     'auth.heroTitle2': 'Claros y personales.',
     'auth.heroSubtitle':
       'Añada lo que toma. Vea interacciones, efectos secundarios y cómo se siente — todo en un solo lugar.',
+    'auth.whatYouGet': 'What you get',
+    'auth.benefit1Title': 'Clear med info',
+    'auth.benefit1Text': 'What each drug is, why you take it, and what to watch for — no medical jargon.',
+    'auth.benefit2Title': 'Your reactions',
+    'auth.benefit2Text': 'Log how you feel and see if symptoms change when you start, stop, or switch a drug.',
+    'auth.benefit3Title': 'Side effects & safety',
+    'auth.benefit3Text': 'Possible side effects, drug interactions, and warnings tailored to your list.',
     'auth.startTracking': 'Empezar',
     'auth.logIn': 'Iniciar sesión',
     'auth.close': 'Cerrar',
@@ -162,6 +183,13 @@ export const authStrings: Record<Locale, Record<AuthTranslationKey, string>> = {
     'auth.heroTitle2': 'Klar und persönlich.',
     'auth.heroSubtitle':
       'Erfassen Sie, was Sie einnehmen. Sehen Sie Wechselwirkungen, Nebenwirkungen und Ihr Befinden — alles an einem Ort.',
+    'auth.whatYouGet': 'What you get',
+    'auth.benefit1Title': 'Clear med info',
+    'auth.benefit1Text': 'What each drug is, why you take it, and what to watch for — no medical jargon.',
+    'auth.benefit2Title': 'Your reactions',
+    'auth.benefit2Text': 'Log how you feel and see if symptoms change when you start, stop, or switch a drug.',
+    'auth.benefit3Title': 'Side effects & safety',
+    'auth.benefit3Text': 'Possible side effects, drug interactions, and warnings tailored to your list.',
     'auth.startTracking': 'Loslegen',
     'auth.logIn': 'Anmelden',
     'auth.close': 'Schließen',
@@ -215,6 +243,13 @@ export const authStrings: Record<Locale, Record<AuthTranslationKey, string>> = {
     'auth.heroTitle2': 'Clairs et personnels.',
     'auth.heroSubtitle':
       'Ajoutez ce que vous prenez. Voyez les interactions, effets secondaires et votre ressenti — au même endroit.',
+    'auth.whatYouGet': 'What you get',
+    'auth.benefit1Title': 'Clear med info',
+    'auth.benefit1Text': 'What each drug is, why you take it, and what to watch for — no medical jargon.',
+    'auth.benefit2Title': 'Your reactions',
+    'auth.benefit2Text': 'Log how you feel and see if symptoms change when you start, stop, or switch a drug.',
+    'auth.benefit3Title': 'Side effects & safety',
+    'auth.benefit3Text': 'Possible side effects, drug interactions, and warnings tailored to your list.',
     'auth.startTracking': 'Commencer',
     'auth.logIn': 'Se connecter',
     'auth.close': 'Fermer',
@@ -267,6 +302,13 @@ export const authStrings: Record<Locale, Record<AuthTranslationKey, string>> = {
     'auth.heroTitle1': '您的用药。',
     'auth.heroTitle2': '清晰又贴心。',
     'auth.heroSubtitle': '添加您正在服用的药物。在一个地方查看相互作用、副作用和您的感受。',
+    'auth.whatYouGet': 'What you get',
+    'auth.benefit1Title': 'Clear med info',
+    'auth.benefit1Text': 'What each drug is, why you take it, and what to watch for — no medical jargon.',
+    'auth.benefit2Title': 'Your reactions',
+    'auth.benefit2Text': 'Log how you feel and see if symptoms change when you start, stop, or switch a drug.',
+    'auth.benefit3Title': 'Side effects & safety',
+    'auth.benefit3Text': 'Possible side effects, drug interactions, and warnings tailored to your list.',
     'auth.startTracking': '开始使用',
     'auth.logIn': '登录',
     'auth.close': '关闭',
@@ -320,6 +362,13 @@ export const authStrings: Record<Locale, Record<AuthTranslationKey, string>> = {
     'auth.heroTitle2': 'ברור ואישי.',
     'auth.heroSubtitle':
       'הוסיפו מה שאתם לוקחים. ראו אינטראקציות, תופעות לוואי ואיך אתם מרגישים — במקום אחד.',
+    'auth.whatYouGet': 'What you get',
+    'auth.benefit1Title': 'Clear med info',
+    'auth.benefit1Text': 'What each drug is, why you take it, and what to watch for — no medical jargon.',
+    'auth.benefit2Title': 'Your reactions',
+    'auth.benefit2Text': 'Log how you feel and see if symptoms change when you start, stop, or switch a drug.',
+    'auth.benefit3Title': 'Side effects & safety',
+    'auth.benefit3Text': 'Possible side effects, drug interactions, and warnings tailored to your list.',
     'auth.startTracking': 'התחילו',
     'auth.logIn': 'התחברות',
     'auth.close': 'סגור',
@@ -373,6 +422,13 @@ export const authStrings: Record<Locale, Record<AuthTranslationKey, string>> = {
     'auth.heroTitle2': 'واضحة وشخصية.',
     'auth.heroSubtitle':
       'أضف ما تتناوله. شاهد التفاعلات والآثار الجانبية وشعورك — في مكان واحد.',
+    'auth.whatYouGet': 'What you get',
+    'auth.benefit1Title': 'Clear med info',
+    'auth.benefit1Text': 'What each drug is, why you take it, and what to watch for — no medical jargon.',
+    'auth.benefit2Title': 'Your reactions',
+    'auth.benefit2Text': 'Log how you feel and see if symptoms change when you start, stop, or switch a drug.',
+    'auth.benefit3Title': 'Side effects & safety',
+    'auth.benefit3Text': 'Possible side effects, drug interactions, and warnings tailored to your list.',
     'auth.startTracking': 'ابدأ',
     'auth.logIn': 'تسجيل الدخول',
     'auth.close': 'إغلاق',
@@ -426,6 +482,13 @@ export const authStrings: Record<Locale, Record<AuthTranslationKey, string>> = {
     'auth.heroTitle2': 'Зрозуміло та персонально.',
     'auth.heroSubtitle':
       'Додайте, що приймаєте. Дивіться взаємодії, побічні ефекти та самопочуття — в одному місці.',
+    'auth.whatYouGet': 'What you get',
+    'auth.benefit1Title': 'Clear med info',
+    'auth.benefit1Text': 'What each drug is, why you take it, and what to watch for — no medical jargon.',
+    'auth.benefit2Title': 'Your reactions',
+    'auth.benefit2Text': 'Log how you feel and see if symptoms change when you start, stop, or switch a drug.',
+    'auth.benefit3Title': 'Side effects & safety',
+    'auth.benefit3Text': 'Possible side effects, drug interactions, and warnings tailored to your list.',
     'auth.startTracking': 'Почати',
     'auth.logIn': 'Увійти',
     'auth.close': 'Закрити',
@@ -475,10 +538,17 @@ export const authStrings: Record<Locale, Record<AuthTranslationKey, string>> = {
     'voice.subscriptionSubtitle': 'Потрібна підписка'
   },
   ru: {
-    'auth.heroTitle1': 'Ваши лекарства.',
-    'auth.heroTitle2': 'Понятно и персонально.',
+    'auth.heroTitle1': 'Всё о ваших лекарствах',
+    'auth.heroTitle2': 'простым языком',
     'auth.heroSubtitle':
-      'Добавьте, что принимаете. Смотрите взаимодействия, побочные эффекты и самочувствие — в одном месте.',
+      'MRX объясняет, что вы принимаете, как таблетки сочетаются, какие бывают побочные эффекты и как организм реагирует — без сложных терминов, в одном месте.',
+    'auth.whatYouGet': 'Что вы получите',
+    'auth.benefit1Title': 'Понимание лекарств',
+    'auth.benefit1Text': 'Простыми словами: что за препарат, зачем его пьют и на что обратить внимание.',
+    'auth.benefit2Title': 'Ваши реакции',
+    'auth.benefit2Text': 'Записывайте самочувствие — видно, что меняется после начала или смены лекарства.',
+    'auth.benefit3Title': 'Побочные эффекты',
+    'auth.benefit3Text': 'Возможные побочки, сочетания между препаратами и предупреждения для вашего списка.',
     'auth.startTracking': 'Начать',
     'auth.logIn': 'Войти',
     'auth.close': 'Закрыть',

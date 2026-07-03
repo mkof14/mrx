@@ -2,9 +2,10 @@ import React, { useState, useMemo } from 'react';
 import { UserProfile } from '../types';
 import { parseAge } from '../utils/profileValidation';
 import PageShell from './PageShell';
-import PageCard, { PageSectionTitle } from './PageCard';
+import PageCard from './PageCard';
 import ClinicalProfileSection from './ClinicalProfileSection';
 import { useI18n } from '../i18n/I18nContext';
+import { PageGuide, PageSummaryRow, PageSectionHeader } from './ui/PageGuide';
 
 interface ProfileProps {
   profile: UserProfile;
@@ -100,23 +101,76 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
     setProfile({ ...profile, known_allergies: updated });
   };
 
+  const profileScore = Math.min(
+    100,
+    (profile.name ? 20 : 0) +
+      (profile.age_years ? 15 : 0) +
+      (profile.preexisting_conditions.length > 0 ? 25 : 0) +
+      (profile.known_allergies.length > 0 ? 25 : 0) +
+      (profile.adverse_drug_reactions?.length ? 15 : 0)
+  );
+
   return (
     <PageShell tabId="profile" narrow>
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
-        <PageCard className="lg:col-span-5 h-fit" padding="sm">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 bg-clinical-500/10 rounded-2xl flex items-center justify-center text-xl">🧬</div>
-              <PageSectionTitle>{t('profile.biometrics')}</PageSectionTitle>
+      <div className="space-y-4 mb-2">
+        <PageGuide
+          icon="🧬"
+          title={t('page.profile.guideTitle')}
+          text={t('page.profile.guideText')}
+          steps={[t('page.profile.guideStep1'), t('page.profile.guideStep2'), t('page.profile.guideStep3')]}
+          accent="#10b981"
+        />
+
+        <div className="rounded-2xl border border-emerald-200/50 dark:border-emerald-900/40 bg-gradient-to-r from-emerald-500/10 to-clinical-500/5 p-4 flex items-center gap-4">
+          <div className="relative w-16 h-16 shrink-0">
+            <svg className="w-full h-full -rotate-90" viewBox="0 0 64 64">
+              <circle cx="32" cy="32" r="26" strokeWidth="5" fill="transparent" className="text-gray-200 dark:text-zinc-700" stroke="currentColor" />
+              <circle
+                cx="32"
+                cy="32"
+                r="26"
+                strokeWidth="5"
+                fill="transparent"
+                stroke="#10b981"
+                strokeDasharray={163}
+                strokeDashoffset={163 - (163 * profileScore) / 100}
+                strokeLinecap="round"
+                className="transition-all duration-700"
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-sm font-black text-emerald-600">{profileScore}%</span>
             </div>
-            <div className="flex p-1 bg-mrx-inset dark:bg-mrx-inset-dark rounded-xl border border-mrx-line dark:border-mrx-line-dark">
-              <button 
+          </div>
+          <div className="min-w-0">
+            <p className="text-lg font-bold text-slate-900 dark:text-white truncate">
+              {profile.name?.trim() || t('profile.namePh')}
+            </p>
+            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">{t('profile.completeHint')}</p>
+          </div>
+        </div>
+
+        <PageSummaryRow
+          items={[
+            { label: t('page.profile.chip1'), value: profile.known_allergies.length, color: '#f43f5e', icon: '🚫' },
+            { label: t('page.profile.chip2'), value: profile.preexisting_conditions.length, color: '#2563eb', icon: '🩺' },
+            { label: t('page.profile.chip3'), value: profile.adverse_drug_reactions?.length || 0, color: '#8b5cf6', icon: '⚡' },
+            { label: t('profile.complete'), value: `${profileScore}%`, hint: t('profile.completeHint'), color: '#10b981', icon: '✓' }
+          ]}
+        />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <PageCard className="lg:col-span-5 h-fit border-l-4 border-l-clinical-500" padding="sm">
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <PageSectionHeader step={1} icon="👤" title={t('profile.biometrics')} color="#2563eb" />
+            <div className="flex p-1 bg-mrx-inset dark:bg-mrx-inset-dark rounded-xl border border-mrx-line dark:border-mrx-line-dark shrink-0">
+              <button
                 onClick={() => setProfile({ ...profile, preferred_units: 'METRIC' })}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${profile.preferred_units === 'METRIC' ? 'bg-mrx-panel dark:bg-mrx-panel-dark text-clinical-600 shadow-mrx-sm' : 'text-gray-500'}`}
               >
                 {t('profile.metric')}
               </button>
-              <button 
+              <button
                 onClick={() => setProfile({ ...profile, preferred_units: 'IMPERIAL' })}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${profile.preferred_units === 'IMPERIAL' ? 'bg-mrx-panel dark:bg-mrx-panel-dark text-clinical-600 shadow-mrx-sm' : 'text-gray-500'}`}
               >
@@ -124,7 +178,7 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
               </button>
             </div>
           </div>
-          
+
           <div className="space-y-6">
             <div className="space-y-2">
               <label className="mrx-label">{t('profile.name')}</label>
@@ -186,17 +240,13 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
           </div>
         </PageCard>
 
-        <PageCard className="lg:col-span-7 space-y-6" padding="sm">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 bg-clinical-500/10 rounded-2xl flex items-center justify-center text-xl">📋</div>
-            <PageSectionTitle>{t('profile.medHistory')}</PageSectionTitle>
-          </div>
+        <PageCard className="lg:col-span-7 space-y-6 border-l-4 border-l-rose-400" padding="sm">
+          <PageSectionHeader step={2} icon="📋" title={t('profile.medHistory')} hint={t('profile.conditionsHint')} color="#f43f5e" />
 
           <div className="space-y-6">
-            <div className="space-y-4">
+            <div className="space-y-4 rounded-2xl bg-blue-500/5 border border-blue-200/40 dark:border-blue-900/30 p-4">
               <div className="flex justify-between items-end">
                 <label className="mrx-label mb-0">{t('profile.conditions')}</label>
-                <span className="text-xs text-gray-400">{t('profile.conditionsHint')}</span>
               </div>
 
               <div className="flex gap-3">
@@ -238,21 +288,22 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2 pt-4 border-t border-mrx-line dark:border-mrx-line-dark">
-                {profile.preexisting_conditions.map((c, i) => (
-                  <span key={i} className="px-3 py-1.5 bg-clinical-500/10 text-clinical-600 dark:text-clinical-400 rounded-full text-xs font-semibold flex items-center gap-2 border border-clinical-500/10">
-                    {c}
-                    <button onClick={() => removeCondition(i)} className="hover:text-clinical-800">×</button>
-                  </span>
-                ))}
+              <div className="flex flex-wrap gap-2 pt-2 border-t border-mrx-line dark:border-mrx-line-dark min-h-[2rem]">
+                {profile.preexisting_conditions.length === 0 ? (
+                  <p className="text-xs text-slate-400 italic py-1">{t('profile.emptyConditions')}</p>
+                ) : (
+                  profile.preexisting_conditions.map((c, i) => (
+                    <span key={i} className="px-3 py-1.5 bg-clinical-500/10 text-clinical-600 dark:text-clinical-400 rounded-full text-xs font-semibold flex items-center gap-2 border border-clinical-500/10">
+                      {c}
+                      <button onClick={() => removeCondition(i)} className="hover:text-clinical-800">×</button>
+                    </span>
+                  ))
+                )}
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex justify-between items-end">
-                <label className="mrx-label mb-0">{t('profile.allergies')}</label>
-                <span className="text-xs text-gray-400">{t('profile.allergiesHint')}</span>
-              </div>
+            <div className="space-y-4 rounded-2xl bg-rose-500/5 border border-rose-200/40 dark:border-rose-900/30 p-4">
+              <PageSectionHeader step={3} icon="🚫" title={t('profile.allergies')} hint={t('profile.allergiesHint')} color="#f43f5e" />
 
               <div className="flex gap-3">
                 <input
@@ -293,13 +344,17 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile }) => {
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2 pt-4 border-t border-mrx-line dark:border-mrx-line-dark">
-                {profile.known_allergies.map((a, i) => (
-                  <span key={i} className="px-3 py-1.5 bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-full text-xs font-semibold flex items-center gap-2 border border-rose-500/10">
-                    {a}
-                    <button onClick={() => removeAllergy(i)} className="hover:text-rose-800">×</button>
-                  </span>
-                ))}
+              <div className="flex flex-wrap gap-2 pt-2 border-t border-mrx-line dark:border-mrx-line-dark min-h-[2rem]">
+                {profile.known_allergies.length === 0 ? (
+                  <p className="text-xs text-slate-400 italic py-1">{t('profile.emptyAllergies')}</p>
+                ) : (
+                  profile.known_allergies.map((a, i) => (
+                    <span key={i} className="px-3 py-1.5 bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-full text-xs font-semibold flex items-center gap-2 border border-rose-500/10">
+                      {a}
+                      <button onClick={() => removeAllergy(i)} className="hover:text-rose-800">×</button>
+                    </span>
+                  ))
+                )}
               </div>
             </div>
 

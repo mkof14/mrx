@@ -5,6 +5,7 @@ import { SYMPTOM_CATEGORIES } from '../constants';
 import { useI18n } from '../i18n/I18nContext';
 import PageShell from './PageShell';
 import PageCard, { PageSectionTitle } from './PageCard';
+import { PageGuide } from './ui/PageGuide';
 
 interface Props {
   medications: Medication[];
@@ -46,6 +47,7 @@ const DailyCheckIn: React.FC<Props> = ({ onSubmit, draft, setDraft }) => {
 
   return (
     <PageShell tabId="checkin" narrow>
+      <PageGuide icon="📝" title={t('page.checkin.guideTitle')} text={t('page.checkin.guideText')} className="mb-1" />
       <form onSubmit={handleSubmit} className="space-y-4">
         <PageCard padding="sm" className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-gradient-to-r from-amber-500/5 to-violet-500/5">
           <div>
@@ -73,7 +75,7 @@ const DailyCheckIn: React.FC<Props> = ({ onSubmit, draft, setDraft }) => {
               <PageCard key={cat.id} padding="sm" hover>
                 <div className="flex items-center gap-3 mb-3">
                   <div
-                    className="w-11 h-11 rounded-xl flex items-center justify-center text-2xl shrink-0"
+                    className="w-9 h-9 rounded-lg flex items-center justify-center text-lg shrink-0"
                     style={{ backgroundColor: `${cat.accent}22` }}
                   >
                     {cat.icon}

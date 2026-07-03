@@ -8,6 +8,7 @@ import { useI18n } from '../i18n/I18nContext';
 import PageShell from './PageShell';
 import PageCard from './PageCard';
 import { LiveDot } from './ui/MrxUI';
+import { PageGuide } from './ui/PageGuide';
 import { playTtsAudio } from '../utils/audio';
 import { summarizeForVoice } from '../utils/ttsText';
 import { useChatHistory, type ChatMessage } from '../hooks/useChatHistory';
@@ -117,9 +118,46 @@ const HealthAssistant: React.FC<Props> = ({ medications, checkins, profile, anal
   const voices: AIVoice[] = ELEVENLABS_VOICE_OPTIONS;
   const speeds = [0.75, 1.0, 1.25, 1.5];
 
+  const quickQuestions = [
+    { key: 'assistant.quick1' as const, icon: '🔗', color: 'border-violet-200 bg-violet-500/10 dark:border-violet-800' },
+    { key: 'assistant.quick2' as const, icon: '⚠️', color: 'border-amber-200 bg-amber-500/10 dark:border-amber-800' },
+    { key: 'assistant.quick3' as const, icon: '📝', color: 'border-emerald-200 bg-emerald-500/10 dark:border-emerald-800' }
+  ];
+
   return (
     <PageShell tabId="assistant">
-      <div className="flex flex-col min-h-[50vh] max-w-4xl mx-auto w-full space-y-3">
+      <div className="flex flex-col min-h-[50vh] max-w-5xl mx-auto w-full space-y-4">
+        <PageGuide
+          icon="🧠"
+          title={t('page.assistant.guideTitle')}
+          text={t('page.assistant.guideText')}
+          steps={[t('page.assistant.guideStep1'), t('page.assistant.guideStep2'), t('page.assistant.guideStep3')]}
+          accent="#6366f1"
+        />
+
+        <div className="flex flex-wrap gap-2">
+          <span className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-clinical-500/10 text-clinical-700 dark:text-clinical-300 border border-clinical-200 dark:border-clinical-800">
+            💊 {t('assistant.contextMeds').replace('{count}', String(medications.length))}
+          </span>
+          <span className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-violet-500/10 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800">
+            📈 {t('assistant.contextCheckins').replace('{count}', String(checkins.length))}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {quickQuestions.map(({ key, icon, color }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => handleSend(t(key))}
+              disabled={isProcessing}
+              className={`flex items-start gap-3 p-3 rounded-2xl border-2 text-left transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-40 ${color}`}
+            >
+              <span className="text-xl leading-none">{icon}</span>
+              <span className="text-xs font-semibold text-slate-800 dark:text-zinc-200 leading-snug">{t(key)}</span>
+            </button>
+          ))}
+        </div>
         <div className="flex flex-col sm:flex-row gap-2">
           <PageCard padding="xs" className="flex-1 flex items-center gap-2 overflow-x-auto">
             <span className="text-[10px] font-semibold text-slate-400 shrink-0">{t('assistant.voiceLabel')}</span>
@@ -154,20 +192,34 @@ const HealthAssistant: React.FC<Props> = ({ medications, checkins, profile, anal
           </PageCard>
         </div>
 
-        <PageCard padding="sm" className="flex-1 flex flex-col min-h-[320px] max-h-[55vh] overflow-hidden">
-          <div className="flex items-center gap-2 mb-3 pb-2 border-b border-mrx-line dark:border-mrx-line-dark">
-            <LiveDot label={t('home.live.tag')} />
-            <span className="text-xs font-semibold text-slate-500">{t('page.assistant.subtitle')}</span>
+        <PageCard padding="sm" className="flex-1 flex flex-col min-h-[360px] max-h-[55vh] overflow-hidden border-2 border-clinical-200/40 dark:border-clinical-800/40">
+          <div className="flex items-center gap-3 mb-3 pb-3 border-b border-mrx-line dark:border-mrx-line-dark">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-clinical-500 to-violet-600 flex items-center justify-center text-xl shadow-mrx-sm">
+              🤖
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-slate-900 dark:text-white">{t('page.assistant.title')}</p>
+              <LiveDot label={t('home.live.tag')} />
+            </div>
           </div>
 
-          <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar min-h-0">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-4 pr-1 custom-scrollbar min-h-0">
+            {messages.length === 0 && !isProcessing && (
+              <div className="text-center py-8 px-4">
+                <div className="text-4xl mb-3">💬</div>
+                <p className="text-sm text-slate-600 dark:text-zinc-400 leading-relaxed max-w-sm mx-auto">{t('assistant.emptyWelcome')}</p>
+              </div>
+            )}
             {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div key={i} className={`flex gap-2 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                {m.role === 'assistant' && (
+                  <span className="w-8 h-8 shrink-0 rounded-lg bg-clinical-500/15 flex items-center justify-center text-sm mt-1">🤖</span>
+                )}
                 <div
-                  className={`max-w-[92%] sm:max-w-[80%] px-4 py-3 rounded-2xl relative group ${
+                  className={`max-w-[85%] sm:max-w-[75%] px-4 py-3 rounded-2xl relative group ${
                     m.role === 'user'
-                      ? 'bg-clinical-600 text-white'
-                      : 'bg-mrx-inset dark:bg-mrx-inset-dark text-slate-900 dark:text-white border border-mrx-line dark:border-mrx-line-dark'
+                      ? 'bg-clinical-600 text-white rounded-br-md'
+                      : 'bg-mrx-inset dark:bg-mrx-inset-dark text-slate-900 dark:text-white border border-mrx-line dark:border-mrx-line-dark rounded-bl-md'
                   }`}
                 >
                   <div className="text-sm leading-relaxed whitespace-pre-wrap">{m.content || (isProcessing && i === messages.length - 1 ? '…' : '')}</div>
@@ -201,6 +253,9 @@ const HealthAssistant: React.FC<Props> = ({ medications, checkins, profile, anal
                     </div>
                   )}
                 </div>
+                {m.role === 'user' && (
+                  <span className="w-8 h-8 shrink-0 rounded-lg bg-clinical-600/20 flex items-center justify-center text-sm mt-1">👤</span>
+                )}
               </div>
             ))}
             {isProcessing && (
