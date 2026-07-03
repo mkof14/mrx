@@ -10,7 +10,10 @@ import { isAdminEmail } from '../lib/admin.js';
 const router = Router();
 
 router.get('/google/status', (_req, res) => {
-  res.json({ configured: isGoogleAuthConfigured() });
+  res.json({
+    configured: isGoogleAuthConfigured(),
+    clientId: process.env.GOOGLE_CLIENT_ID || null
+  });
 });
 
 router.post('/google', async (req, res) => {

@@ -611,6 +611,7 @@ const en: Record<TranslationKey, string> = {
   'tools.pwaDesc': 'Add to your home screen for quick daily check-ins.',
   'tools.pwaInstall': 'Install app',
   'tools.pwaInstalled': 'Already installed',
+  'tools.pwaDesktop': 'Desktop Chrome/Edge: click the install icon in the address bar, or Menu → Install MRX.',
   'tools.pwaIos': 'iPhone/iPad: tap Share → Add to Home Screen.',
   'tools.pwaAndroid': 'Android: tap menu → Install app or Add to Home screen.',
   'tools.billingTitle': 'Your plan',

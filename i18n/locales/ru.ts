@@ -600,6 +600,7 @@ export const ruLocale: Partial<Record<AppTranslationKey, string>> = {
   'tools.pwaDesc': 'Добавьте на главный экран для ежедневных записей.',
   'tools.pwaInstall': 'Установить',
   'tools.pwaInstalled': 'Уже установлено',
+  'tools.pwaDesktop': 'Компьютер Chrome/Edge: иконка установки в адресной строке или Меню → Установить MRX.',
   'tools.pwaIos': 'iPhone/iPad: Поделиться → На экран «Домой».',
   'tools.pwaAndroid': 'Android: меню → Установить приложение.',
   'tools.billingTitle': 'Ваш план',

@@ -73,7 +73,7 @@ export const api = {
         '/auth/login',
         { email, password }
       ),
-    googleStatus: () => api.get<{ configured: boolean }>('/auth/google/status'),
+    googleStatus: () => api.get<{ configured: boolean; clientId?: string | null }>('/auth/google/status'),
     google: (credential: string) =>
       api.post<{ token: string; user: { id: string; email: string }; profile: unknown }>(
         '/auth/google',

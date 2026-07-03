@@ -161,7 +161,7 @@ export type TranslationKey =
   | 'tools.caregiverHeading' | 'tools.caregiverSub' | 'tools.caregiverLabel' | 'tools.caregiverLabelPh'
   | 'tools.caregiverCreate' | 'tools.caregiverLinkReady' | 'tools.caregiverNote' | 'tools.caregiverDefaultLabel'
   | 'tools.caregiverViewBadge' | 'tools.copyLink' | 'tools.shareReadOnly' | 'tools.shareLink' | 'tools.shareQr'
-  | 'tools.pwaTitle' | 'tools.pwaDesc' | 'tools.pwaInstall' | 'tools.pwaInstalled' | 'tools.pwaIos' | 'tools.pwaAndroid'
+  | 'tools.pwaTitle' | 'tools.pwaDesc' | 'tools.pwaInstall' | 'tools.pwaInstalled' | 'tools.pwaDesktop' | 'tools.pwaIos' | 'tools.pwaAndroid'
   | 'tools.billingTitle' | 'tools.billingDesc' | 'tools.billingBtn' | 'tools.emergencyCall';
 
 /** Keys for i18n/locales/*.ts (auth + voice-gated strings come from authLocales). */

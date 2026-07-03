@@ -7,6 +7,7 @@ import LanguageSelector from './LanguageSelector';
 import { useI18n } from '../i18n/I18nContext';
 import { api } from '../services/apiClient';
 import { PageGuide, SettingRow } from './ui/PageGuide';
+import PwaInstallCard from './PwaInstallCard';
 
 interface SettingsProps {
   profile: UserProfile;
@@ -42,6 +43,8 @@ const Settings: React.FC<SettingsProps> = ({ profile, setProfile, theme, toggleT
   return (
     <PageShell tabId="settings" narrow>
       <PageGuide icon="⚙️" title={t('page.settings.guideTitle')} text={t('page.settings.guideText')} className="mb-1" />
+
+      <PwaInstallCard />
 
       <PageCard padding="md" className="space-y-1">
         <SettingRow icon="🌍" title={t('common.language')} desc={t('settings.languageDesc')}>

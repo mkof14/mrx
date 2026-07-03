@@ -8,6 +8,7 @@ import LanguageSelector from './LanguageSelector';
 import ThemeToggle from './ThemeToggle';
 import PasswordField from './PasswordField';
 import MedTicker from './MedTicker';
+import PwaInstallCard from './PwaInstallCard';
 import LiveScanDemo from './LiveScanDemo';
 import { useI18n } from '../i18n/I18nContext';
 import { isLocale } from '../i18n/languages';
@@ -40,6 +41,9 @@ const Auth: React.FC<AuthProps> = ({
   const [initialLegalSection, setInitialLegalSection] = useState('privacy');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [googleConfigured, setGoogleConfigured] = useState(false);
+  const [googleClientId, setGoogleClientId] = useState<string | null>(
+    import.meta.env.VITE_GOOGLE_CLIENT_ID || null
+  );
   const [funFactIdx, setFunFactIdx] = useState(0);
   const googleBtnRef = useRef<HTMLDivElement>(null);
 
@@ -63,7 +67,13 @@ const Auth: React.FC<AuthProps> = ({
   };
 
   useEffect(() => {
-    api.auth.googleStatus().then((r) => setGoogleConfigured(r.configured)).catch(() => setGoogleConfigured(false));
+    api.auth
+      .googleStatus()
+      .then((r) => {
+        setGoogleConfigured(r.configured);
+        if (r.clientId) setGoogleClientId(r.clientId);
+      })
+      .catch(() => setGoogleConfigured(false));
   }, []);
 
   useEffect(() => {
@@ -86,7 +96,7 @@ const Auth: React.FC<AuthProps> = ({
   );
 
   useEffect(() => {
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    const clientId = googleClientId;
     if (!clientId || !googleConfigured || !showLoginForm || !googleBtnRef.current) return;
 
     const mountGoogleButton = () => {
@@ -125,7 +135,7 @@ const Auth: React.FC<AuthProps> = ({
     script.dataset.mrxGoogle = 'true';
     script.onload = mountGoogleButton;
     document.body.appendChild(script);
-  }, [googleConfigured, showLoginForm, theme, locale, handleGoogleCredential]);
+  }, [googleClientId, googleConfigured, showLoginForm, theme, locale, handleGoogleCredential]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -309,7 +319,7 @@ const Auth: React.FC<AuthProps> = ({
                 </div>
               )}
 
-              {(googleConfigured && import.meta.env.VITE_GOOGLE_CLIENT_ID) ? (
+              {(googleConfigured && googleClientId) ? (
                 <div className="space-y-3">
                   <div ref={googleBtnRef} className="flex justify-center min-h-[44px]" />
                   <div className="relative flex items-center py-1">
@@ -364,6 +374,12 @@ const Auth: React.FC<AuthProps> = ({
           </div>
         )}
       </main>
+
+      {!showLoginForm && (
+        <div className="max-w-md mx-auto px-6 pb-4 no-print">
+          <PwaInstallCard />
+        </div>
+      )}
 
       <div className="w-full text-center py-6 px-6 no-print">
         <p className="text-xs text-gray-400 dark:text-zinc-500">{t('common.disclaimer')}</p>

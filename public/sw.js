@@ -1,5 +1,5 @@
-const CACHE = 'mrx-v1';
-const PRECACHE = ['/', '/index.html', '/manifest.webmanifest'];
+const CACHE = 'mrx-v2';
+const PRECACHE = ['/', '/index.html', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png', '/icon.svg'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)).then(() => self.skipWaiting()));

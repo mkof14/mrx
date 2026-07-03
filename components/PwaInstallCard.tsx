@@ -44,6 +44,7 @@ const PwaInstallCard: React.FC = () => {
         </button>
       ) : (
         <div className="text-left text-xs text-slate-500 space-y-2 p-3 rounded-xl bg-mrx-inset dark:bg-mrx-inset-dark">
+          <p>{t('tools.pwaDesktop')}</p>
           <p>{t('tools.pwaIos')}</p>
           <p>{t('tools.pwaAndroid')}</p>
         </div>
