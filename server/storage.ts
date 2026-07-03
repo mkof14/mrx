@@ -7,13 +7,33 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const DB_REDIS_KEY = 'mrx:database';
 
-const dataDir = process.env.DATABASE_PATH
-  ? path.dirname(process.env.DATABASE_PATH)
-  : path.join(__dirname, '..', 'data');
-const dbFile = process.env.DATABASE_PATH || path.join(dataDir, 'mrx.json');
+function resolveDbPaths(): { dataDir: string; dbFile: string } {
+  if (process.env.DATABASE_PATH) {
+    return {
+      dataDir: path.dirname(process.env.DATABASE_PATH),
+      dbFile: process.env.DATABASE_PATH
+    };
+  }
+  // Vercel serverless filesystem is read-only except /tmp
+  if (process.env.VERCEL) {
+    return { dataDir: '/tmp', dbFile: '/tmp/mrx.json' };
+  }
+  const dataDir = path.join(__dirname, '..', 'data');
+  return { dataDir, dbFile: path.join(dataDir, 'mrx.json') };
+}
+
+const { dataDir, dbFile } = resolveDbPaths();
+
+function redisEnv(): { url?: string; token?: string } {
+  return {
+    url: process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN
+  };
+}
 
 export function isRedisConfigured(): boolean {
-  return Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+  const { url, token } = redisEnv();
+  return Boolean(url && token);
 }
 
 export function getStorageMode(): 'redis' | 'file' {
@@ -29,6 +49,11 @@ function ensureDir() {
   if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir, { recursive: true });
   }
+}
+
+export function ensureStorageReady() {
+  if (isRedisConfigured()) return;
+  ensureDir();
 }
 
 export function normalizeDb(raw: DbSchema): DbSchema {

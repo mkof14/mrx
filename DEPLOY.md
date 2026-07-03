@@ -17,11 +17,22 @@ Vercel → **Settings → Environment Variables** → `JWT_SECRET` = that string
 - [Google AI Studio](https://aistudio.google.com/apikey) → Create API key
 - Vercel → `GEMINI_API_KEY`
 
-### 4. Site URL (optional)
-- `CLIENT_ORIGIN=https://your-app.vercel.app`  
-- If omitted, the app uses `https://${VERCEL_URL}` automatically.
+### 4. Google Sign-In
+Copy from your local `.env.local` (same OAuth client from [Google Cloud Console](https://console.cloud.google.com/apis/credentials)):
 
-### 5. Redeploy
+| Variable | Where |
+|---|---|
+| `GOOGLE_CLIENT_ID` | Server — verifies login |
+| `VITE_GOOGLE_CLIENT_ID` | Build — same value; required for the button if API is slow |
+
+In Google Cloud → OAuth client → **Authorized JavaScript origins**, add:
+- `https://mrx-lemon.vercel.app` (your production URL)
+
+### 5. Site URL
+- `CLIENT_ORIGIN=https://mrx-lemon.vercel.app`  
+- Without this, OAuth redirects may use a preview URL instead of your main domain.
+
+### 6. Redeploy
 After env vars change: **Deployments → Redeploy**
 
 ---
@@ -52,7 +63,7 @@ Or log in as admin → **Admin → Integrations**.
 | Variable | Why |
 |---|---|
 | `ELEVENLABS_API_KEY` | Better voice assistant |
-| `GOOGLE_CLIENT_ID` + `VITE_GOOGLE_CLIENT_ID` | Sign in with Google |
+| *(see step 4)* | Sign in with Google |
 | `STRIPE_*` | Paid subscriptions (without Stripe, 7-day trial works) |
 
 ---

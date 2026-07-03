@@ -40,7 +40,7 @@ const Auth: React.FC<AuthProps> = ({
   const [showFAQModal, setShowFAQModal] = useState(false);
   const [initialLegalSection, setInitialLegalSection] = useState('privacy');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [googleConfigured, setGoogleConfigured] = useState(false);
+  const [googleStatusLoaded, setGoogleStatusLoaded] = useState(false);
   const [googleClientId, setGoogleClientId] = useState<string | null>(
     import.meta.env.VITE_GOOGLE_CLIENT_ID || null
   );
@@ -70,10 +70,10 @@ const Auth: React.FC<AuthProps> = ({
     api.auth
       .googleStatus()
       .then((r) => {
-        setGoogleConfigured(r.configured);
         if (r.clientId) setGoogleClientId(r.clientId);
       })
-      .catch(() => setGoogleConfigured(false));
+      .catch(() => undefined)
+      .finally(() => setGoogleStatusLoaded(true));
   }, []);
 
   useEffect(() => {
@@ -97,7 +97,7 @@ const Auth: React.FC<AuthProps> = ({
 
   useEffect(() => {
     const clientId = googleClientId;
-    if (!clientId || !googleConfigured || !showLoginForm || !googleBtnRef.current) return;
+    if (!clientId || !showLoginForm || !googleBtnRef.current) return;
 
     const mountGoogleButton = () => {
       if (!window.google?.accounts?.id || !googleBtnRef.current) return;
@@ -135,7 +135,7 @@ const Auth: React.FC<AuthProps> = ({
     script.dataset.mrxGoogle = 'true';
     script.onload = mountGoogleButton;
     document.body.appendChild(script);
-  }, [googleClientId, googleConfigured, showLoginForm, theme, locale, handleGoogleCredential]);
+  }, [googleClientId, showLoginForm, theme, locale, handleGoogleCredential]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -319,7 +319,7 @@ const Auth: React.FC<AuthProps> = ({
                 </div>
               )}
 
-              {(googleConfigured && googleClientId) ? (
+              {googleClientId ? (
                 <div className="space-y-3">
                   <div ref={googleBtnRef} className="flex justify-center min-h-[44px]" />
                   <div className="relative flex items-center py-1">
@@ -330,9 +330,9 @@ const Auth: React.FC<AuthProps> = ({
                     <div className="flex-grow border-t border-mrx-line dark:border-mrx-line-dark" />
                   </div>
                 </div>
-              ) : googleConfigured ? null : (
+              ) : googleStatusLoaded ? (
                 <p className="text-[11px] text-center text-gray-400 dark:text-zinc-500">{t('auth.googleUnavailable')}</p>
-              )}
+              ) : null}
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>

@@ -4,7 +4,6 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import fs from 'fs';
 import authRoutes from './routes/auth.js';
 import dataRoutes from './routes/data.js';
 import aiRoutes from './routes/ai.js';
@@ -13,7 +12,7 @@ import shareRoutes from './routes/share.js';
 import billingRoutes from './routes/billing.js';
 import adminRoutes from './routes/admin.js';
 import { attachDatabase, initDatabase } from './db.js';
-import { getStorageMode } from './storage.js';
+import { ensureStorageReady, getStorageMode } from './storage.js';
 import { isGeminiConfigured } from './services/gemini.js';
 import { isElevenLabsConfigured } from './services/elevenlabs.js';
 import { isGoogleAuthConfigured } from './services/googleAuth.js';
@@ -26,16 +25,6 @@ function resolveClientOrigin(): string {
   if (process.env.CLIENT_ORIGIN) return process.env.CLIENT_ORIGIN;
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
   return 'http://localhost:3000';
-}
-
-function ensureDataDir() {
-  if (getStorageMode() === 'redis') return;
-  const dataDir = process.env.DATABASE_PATH
-    ? path.dirname(process.env.DATABASE_PATH)
-    : path.join(__dirname, '..', 'data');
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-  }
 }
 
 export function createApp() {
@@ -66,6 +55,7 @@ export function createApp() {
       warnings: [
         !isGeminiConfigured() ? 'Set GEMINI_API_KEY for AI chat, analysis, and label scan' : null,
         !jwtOk ? 'Set JWT_SECRET to a long random string in production' : null,
+        !isGoogleAuthConfigured() ? 'Set GOOGLE_CLIENT_ID for Google Sign-In' : null,
         process.env.VERCEL && getStorageMode() !== 'redis'
           ? 'Connect Upstash Redis on Vercel — file storage is wiped on redeploy'
           : null
@@ -73,10 +63,17 @@ export function createApp() {
     });
   });
 
+  app.get('/api/auth/google/status', (_req, res) => {
+    res.json({
+      configured: isGoogleAuthConfigured(),
+      clientId: process.env.GOOGLE_CLIENT_ID || null
+    });
+  });
+
   app.use('/api', async (_req, _res, next) => {
     try {
       if (!dbReady) {
-        ensureDataDir();
+        ensureStorageReady();
         await initDatabase();
         dbReady = true;
       } else {
